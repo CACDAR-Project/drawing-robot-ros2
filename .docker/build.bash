@@ -14,8 +14,9 @@ if [ "${#}" -gt "0" ]; then
     fi
 fi
 
+#docker build
 DOCKER_BUILD_CMD=(
-    docker build
+    podman build --format docker
     "${PROJECT_DIR}"
     --tag "${TAG}"
     "${BUILD_ARGS}"
