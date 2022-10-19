@@ -13,6 +13,7 @@
   <depend>rclcpp</depend>
   <depend>geometry_msgs</depend>
   <depend>tf2_ros</depend>
+  <depend>python-lxml</depend>
   <!-- <depend>moveit_ros_planning_interface</depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
