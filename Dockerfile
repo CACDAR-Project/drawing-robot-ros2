@@ -41,6 +41,17 @@ RUN rosdep update && \
     colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" && \
     rm -rf ${WS_LOG_DIR}
 
+### Copy code built on top of example ign_moveit2_examples
+# TODO clean build process
+COPY ./src/* ${WS_SRC_DIR}/
+RUN rosdep update && \
+    apt-get update && \
+    rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR} && \
+    rm -rf /var/lib/apt/lists/* && \
+    source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" && \
+    rm -rf ${WS_LOG_DIR}
+
 ### Add workspace to the ROS entrypoint
 ### Source ROS workspace inside `~/.bashrc` to enable autocompletion
 RUN sed -i '$i source "${WS_INSTALL_DIR}/local_setup.bash" --' /ros_entrypoint.sh && \
