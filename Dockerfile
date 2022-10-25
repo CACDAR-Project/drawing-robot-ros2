@@ -21,8 +21,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 ### Import and install dependencies, then build these dependencies (not ign_moveit2_examples yet)
-COPY ./ign_moveit2_examples.repos ${WS_SRC_DIR}/ign_moveit2_examples/ign_moveit2_examples.repos
-RUN vcs import --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/ign_moveit2_examples/ign_moveit2_examples.repos && \
+COPY ./drawing_robot_ros2.repos ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos
+RUN vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos && \
     rosdep update && \
     apt-get update && \
     rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR} && \
