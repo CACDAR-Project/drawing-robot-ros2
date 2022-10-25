@@ -81,16 +81,16 @@ def generate_declared_arguments() -> List[DeclareLaunchArgument]:
         # Robot selection
         DeclareLaunchArgument(
             "robot_type",
-            default_value="panda",
+            default_value="lite6",
             description="Name of the robot to use.",
         ),
         # Miscellaneous
         DeclareLaunchArgument(
             "rviz_config",
             default_value=path.join(
-                get_package_share_directory("ign_moveit2_examples"),
+                get_package_share_directory("xarm_description"),
                 "rviz",
-                "ign_moveit2_examples.rviz",
+                "display.rviz",
             ),
             description="Path to configuration for RViz2.",
         ),

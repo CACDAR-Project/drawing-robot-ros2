@@ -82,11 +82,7 @@ def generate_launch_description() -> LaunchDescription:
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution(
-                    [
-                        FindPackageShare([robot_type, "_moveit_config"]),
-                        "launch",
-                        "move_group.launch.py",
-                    ]
+                    [FindPackageShare("xarm_moveit_config"), "launch", "lite6_moveit_fake.launch.py"]
                 )
             ),
             launch_arguments=[

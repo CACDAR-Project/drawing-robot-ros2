@@ -32,6 +32,10 @@ install(PROGRAMS
     ${SRC_PY_DIR}/follow.py
     DESTINATION lib/${PROJECT_NAME}
 )
+install(PROGRAMS
+    ${SRC_PY_DIR}/robots/lite6.py
+    DESTINATION lib/${PROJECT_NAME}/robots/
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

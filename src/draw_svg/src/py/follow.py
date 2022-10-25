@@ -4,7 +4,7 @@
 import rclpy
 from geometry_msgs.msg import Pose, PoseStamped
 from pymoveit2 import MoveIt2
-from pymoveit2.robots import panda
+from robots import lite6
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -21,10 +21,10 @@ class FollowTarget(Node):
         # Create MoveIt 2 interface
         self._moveit2 = MoveIt2(
             node=self,
-            joint_names=panda.joint_names(),
-            base_link_name=panda.base_link_name(),
-            end_effector_name=panda.end_effector_name(),
-            group_name=panda.MOVE_GROUP_ARM,
+            joint_names=lite6.joint_names(),
+            base_link_name=lite6.base_link_name(),
+            end_effector_name=lite6.end_effector_name(),
+            group_name=lite6.MOVE_GROUP_ARM,
             execute_via_moveit=True,
             callback_group=self._callback_group,
         )

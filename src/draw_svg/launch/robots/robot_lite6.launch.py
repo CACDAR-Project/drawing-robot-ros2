@@ -1,5 +1,5 @@
 #!/usr/bin/env -S ros2 launch
-"""Launch script for spawning Franka Emika Panda into Ignition Gazebo world"""
+"""Launch script for spawning ufactory xarm lite6 into Ignition Gazebo world"""
 
 from typing import List
 
