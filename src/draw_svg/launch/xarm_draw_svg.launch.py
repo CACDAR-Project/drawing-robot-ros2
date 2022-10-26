@@ -77,7 +77,7 @@ def launch_setup(context, *args, **kwargs):
     # robot gazebo launch
     # xarm_gazebo/launch/_robot_beside_table_gazebo.launch.py
     robot_gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('xarm_gazebo'), 'launch', '_robot_beside_table_gazebo.launch.py'])),
+        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('draw_svg'), 'launch', 'robots', '_robot_beside_table_gazebo.launch.py'])),
         launch_arguments={
             'prefix': prefix,
             'hw_ns': hw_ns,
@@ -110,11 +110,22 @@ def launch_setup(context, *args, **kwargs):
             parameters=[{"use_sim_time": True}],
         )
 
+    # ros_ign_gazebo_create
+    #model = LaunchConfiguration("model")
+    #ros_ign_bridge = Node(
+    #        package="ros_ign_gazebo",
+    #        executable="create",
+    #        output="log",
+    #        arguments=["-file", model, "--ros-args", "--log-level", log_level],
+    #        parameters=[{"use_sim_time": use_sim_time}],
+    #    )
+
     return [
         robot_gazebo_launch,
         robot_moveit_common_launch,
         followNode,
         drawNode,
+        #ros_ign_bridge,
     ]
 
 

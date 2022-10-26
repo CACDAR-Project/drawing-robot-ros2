@@ -66,7 +66,7 @@ class PublishTarget(Node):
         #print(p.orientation)
         xml = ET.parse('svg/test.svg')
         svg = xml.getroot()
-        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.0, 0.5, 0.3, 0.8)
+        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.1, 0.5, -0.2, 0.2)
         self.points = []
         for child in svg:
             if (child.tag == 'line'):
