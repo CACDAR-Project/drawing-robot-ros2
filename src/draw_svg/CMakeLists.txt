@@ -13,17 +13,20 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 
-#add_executable(draw_svg src/draw_svg.cpp)
-#target_include_directories(draw_svg PUBLIC
-#  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#  $<INSTALL_INTERFACE:include>)
-#target_compile_features(draw_svg PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-#ament_target_dependencies(
-#  draw_svg
-#  "ign_moveit2_examples"
-#)
-#install(TARGETS draw_svg
-#  DESTINATION lib/${PROJECT_NAME})
+# Install C++
+set(SRC_CPP_DIR src/cpp)
+# Example 0 - Follow target
+set(EXECUTABLE_0 log_position)
+add_executable(${EXECUTABLE_0} ${SRC_CPP_DIR}/${EXECUTABLE_0}.cpp)
+ament_target_dependencies(${EXECUTABLE_0}
+    rclcpp
+    geometry_msgs
+    moveit_ros_planning_interface
+)
+install(TARGETS
+    ${EXECUTABLE_0}
+    DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install Python
 set(SRC_PY_DIR src/py)
