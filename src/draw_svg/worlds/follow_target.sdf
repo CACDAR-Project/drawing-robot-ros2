@@ -51,31 +51,31 @@
     <!-- Models -->
     <!--        -->
     <!-- Ground -->
-    <!-- <model name="ground_plane">
-         <pose>0 0 0 0 0 0</pose>
-         <static>true</static>
-         <link name="ground_plane_link">
-         <collision name="ground_plane_collision">
-         <geometry>
-         <plane>
-         <normal>0 0 1</normal>
-         </plane>
-         </geometry>
-         </collision>
-         <visual name="ground_plane_visual">
-         <geometry>
-         <plane>
-         <normal>0 0 1</normal>
-         <size>4 4</size>
-         </plane>
-         </geometry>
-         <material>
-         <diffuse>0.8 0.8 0.8 1</diffuse>
-         <specular>0.8 0.8 0.8 1</specular>
-         </material>
-         </visual>
+    <model name="ground_plane">
+      <pose>0 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="ground_plane_link">
+      <collision name="ground_plane_collision">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+          </plane>
+        </geometry>
+      </collision>
+      <visual name="ground_plane_visual">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>4 4</size>
+          </plane>
+        </geometry>
+        <material>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+        </material>
+      </visual>
          </link>
-         </model> -->
+    </model>
     <model name="drawing_surface">
       <pose>-0.14 -0.3 1.0 0 0 0</pose>
       <static>true</static>
@@ -102,10 +102,9 @@
         </visual>
       </link>
     </model>
-    <include>
-      <uri>model://ground_plane</uri>
-      <pose>0.5 -0.25 0.5 3.1415927 0 0</pose>
-    </include>
+    <!-- <include>
+         <uri>model://ground_plane</uri>
+         </include> -->
     <!-- <include>
          <uri>model://sun</uri>
          </include> -->
@@ -113,8 +112,8 @@
          <uri>model://table</uri>
          <name>table</name>
          <pose>0.0 -0.84 0 0 0 0</pose>
-         </include> -->
-
+         </include>
+    -->
     <!-- Static target -->
     <!-- <model name="target">
          <static>true</static>
