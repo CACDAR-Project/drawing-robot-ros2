@@ -33,6 +33,7 @@ set(SRC_PY_DIR src/py)
 install(PROGRAMS
     ${SRC_PY_DIR}/draw_svg.py
     ${SRC_PY_DIR}/follow.py
+    ${SRC_PY_DIR}/drawing_surface.py
     DESTINATION lib/${PROJECT_NAME}
 )
 install(PROGRAMS
