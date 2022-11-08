@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<sdf version="1.9">
+<!-- <sdf version="1.9"> -->
+<sdf version="1.7">
   <world name="draw_svg_world">
 
     <!-- Physics -->
@@ -104,6 +105,7 @@
     </model>
     <!-- <include>
          <uri>model://ground_plane</uri>
+         <pose>0.0 -0.84 0 0 0 0</pose>
          </include> -->
     <!-- <include>
          <uri>model://sun</uri>
