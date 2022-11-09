@@ -84,7 +84,8 @@
       <body_name>link6</body_name>
       <!--       topic name is always /odom -->
       <!-- <topic_name>pen_position</topic_name> -->
-      <update_rate>0.1</update_rate>
+      <!--       Update rate in Hz -->
+      <update_rate>10</update_rate>
       <!-- <xyzOffsets>0 0 0</xyzOffsets> -->
       <!-- <rpyOffsets>0 0 0</rpyOffsets> -->
     </plugin>
