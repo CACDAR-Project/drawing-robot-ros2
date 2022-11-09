@@ -13,7 +13,8 @@
   <depend>rclcpp</depend>
   <depend>geometry_msgs</depend>
   <depend>tf2_ros</depend>
-  <depend>python-lxml</depend>
+  <depend>python3-lxml</depend>
+  <depend>python3-tk</depend>
   <depend>xarm_description</depend>
   <depend>xarm_moveit_config</depend>
   <!-- <depend>moveit_ros_planning_interface</depend> -->
