@@ -125,11 +125,16 @@ def launch_setup(context, *args, **kwargs):
             arguments=["--ros-args", "--log-level", log_level],
             parameters=[{"use_sim_time": use_sim_time}],
         ),
+        Node(
+            package="draw_svg",
+            executable="drawing_surface.py",
+            output="log",
+            arguments=["--ros-args", "--log-level", log_level],
+            parameters=[{"use_sim_time": use_sim_time}],
+        ),
     ]
 
-    return [
-        nodes[0],
-        nodes[1],
+    return nodes + [
         robot_moveit_common_launch,
         robot_gazebo_launch,
     ]

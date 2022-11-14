@@ -45,7 +45,7 @@ class DrawingApp(tk.Tk):
         print("last_point->x:{} y:{} z:{}".format(p.x, p.y, p.z))
         r = 5
         x = translate(p.x, -1.0, 0.5, 0, 400)
-        y = translate(p.y, -1.0, 0.5, 0, 400)
+        y = translate(p.y, 0.5, -1.0, 0, 400)
         self.create_circle(x,y,r, fill="red")
         self.after(10, lambda: self.read_queue())
 
