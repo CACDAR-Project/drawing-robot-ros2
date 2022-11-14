@@ -16,6 +16,7 @@ import tkinter as tk
 import math
 
 import threading
+import atexit
 
 def translate(val, lmin, lmax, rmin, rmax):
     lspan = lmax - lmin
@@ -68,6 +69,9 @@ class LogPen(Node):
             callback_group=self._callback_group,
         )
         self.get_logger().info("Initialization successful.")
+        #atexit.register(self.cleanup)
+    #def cleanup(self):
+        #app.quit()
 
     def pen_position_callback(self, msg: Odometry):
         """
@@ -90,7 +94,7 @@ def main(args=None):
     rclpy.shutdown()
     exit(0)
 
-def log_thread(queue=Queue()):
+def start_log_thread(queue=Queue()):
 
     rclpy.init()
 
@@ -98,10 +102,10 @@ def log_thread(queue=Queue()):
 
     executor = rclpy.executors.MultiThreadedExecutor(2)
     executor.add_node(log_pen)
-    executor.spin()
+    #executor.spin()
 
-    rclpy.shutdown()
-    exit(0)
+    #rclpy.shutdown()
+    #exit(0)
 
 
 if __name__ == "__main__":
@@ -109,13 +113,18 @@ if __name__ == "__main__":
 
     q = Queue()
 
-    thread0 = threading.Thread(target=log_thread, args=[q])
-    thread0.start()
+    global app
+    app = DrawingApp(q)
+
+    global log_thread
+    log_thread = threading.Thread(target=start_log_thread, args=[q])
+    log_thread.start()
 
     #thread0.join()
     #thread1 = threading.Thread(target=DrawingApp().mainloop)
     #thread1.start()
     #thread1.join()
 
-    app = DrawingApp(q)
     app.mainloop()
+    rclpy.shutdown()
+    exit(0)
