@@ -16,7 +16,6 @@ import tkinter as tk
 import math
 
 import threading
-import atexit
 
 def translate(val, lmin, lmax, rmin, rmax):
     lspan = lmax - lmin
@@ -31,7 +30,6 @@ class DrawingApp(tk.Tk):
         self.queue = queue
         self.canvas = tk.Canvas(self, width=400, height=400)
         self.canvas.pack(side="top", fill="both", expand=True)
-        #self.canvas.create_line(200,200, 200,200, tags=("line",), arrow="last")
         self.read_queue()
 
     def create_circle(self, x, y, r, **kwargs):
@@ -43,7 +41,7 @@ class DrawingApp(tk.Tk):
             self.after(10, lambda: self.read_queue())
             return
         p = self.queue.get()
-        print("last_point->x:{} y:{} z:{}".format(p.x, p.y, p.z))
+        #print("last_point->x:{} y:{} z:{}".format(p.x, p.y, p.z))
         r = 5
         x = translate(p.x, -1.0, 0.5, 0, 400)
         y = translate(p.y, 0.5, -1.0, 0, 400)
@@ -69,16 +67,12 @@ class LogPen(Node):
             callback_group=self._callback_group,
         )
         self.get_logger().info("Initialization successful.")
-        #atexit.register(self.cleanup)
-    #def cleanup(self):
-        #app.quit()
-
     def pen_position_callback(self, msg: Odometry):
         """
         Log position of pen
         """
         p = msg.pose.pose.position
-        #self.get_logger().info("x:{} y:{} z:{}".format(p.x, p.y, p.z))
+        self.get_logger().info("x:{} y:{} z:{}".format(p.x, p.y, p.z))
         self.queue.put(p)
 
 def main(args=None):
@@ -102,15 +96,10 @@ def start_log_thread(queue=Queue()):
 
     executor = rclpy.executors.MultiThreadedExecutor(2)
     executor.add_node(log_pen)
-    #executor.spin()
-
-    #rclpy.shutdown()
-    #exit(0)
+    executor.spin()
 
 
 if __name__ == "__main__":
-    #main()
-
     q = Queue()
 
     global app
@@ -119,11 +108,6 @@ if __name__ == "__main__":
     global log_thread
     log_thread = threading.Thread(target=start_log_thread, args=[q])
     log_thread.start()
-
-    #thread0.join()
-    #thread1 = threading.Thread(target=DrawingApp().mainloop)
-    #thread1.start()
-    #thread1.join()
 
     app.mainloop()
     rclpy.shutdown()
