@@ -78,7 +78,7 @@
          </link>
     </model>
     <model name="drawing_surface">
-      <pose>-0.14 -0.3 1.0 0 0 0</pose>
+      <pose>-0.14 -0.3 0.5 0 0 0</pose>
       <static>true</static>
       <link name="drawing_surface_link">
         <collision name="drawing_surface_collision">
@@ -90,17 +90,32 @@
           </geometry>
         </collision>
         <visual name="drawing_surface_visual">
+          <origin xyz="0 0 0" rpy="0 0 0" />
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>0.28 0.21</size>
-            </plane>
-          </geometry>
-          <material>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
-          </material>
+             <plane>
+               <normal>0 0 1</normal>
+               <size>0.28 0.21</size>
+             </plane>
+           </geometry>
+      <!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/foxy/gazebo_plugins/src/gazebo_ros_video.cpp -->
+      <!--  https://github.com/ros-simulation/gazebo_ros_pkgs/blob/foxy/gazebo_plugins/worlds/gazebo_ros_video_demo.world -->
+        <!--         TODO: note docs outdated: https://classic.gazebosim.org/tutorials?tut=ros_gzplugins -->
+          <plugin name="drawing_surface" filename="libgazebo_ros_video.so">
+            <!-- <ros>
+                 <remapping>~/image_raw:=/camera1/image_raw</remapping>
+                 </ros> -->
+            <height>400</height>
+            <width>400</width>
+          </plugin>
         </visual>
+        <!-- <inertial>
+             <origin xyz="0 0 1" rpy="0 0 0"/>
+             <mass value="1"/>
+             <inertia
+             ixx="1.0" ixy="0.0" ixz="0.0"
+             iyy="1.0" iyz="0.0"
+             izz="1.0"/>
+             </inertial> -->
       </link>
     </model>
     <!-- <include>

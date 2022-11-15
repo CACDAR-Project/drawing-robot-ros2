@@ -20,6 +20,10 @@ RUN apt-get update && \
     ignition-${IGNITION_VERSION} && \
     rm -rf /var/lib/apt/lists/*
 
+### Install extra dependencies
+RUN apt-get update && \
+    apt-get install -yq python3-pil.imagetk
+
 ### Import and install dependencies, then build these dependencies (not ign_moveit2_examples yet)
 COPY ./drawing_robot_ros2.repos ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos
 RUN vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos && \

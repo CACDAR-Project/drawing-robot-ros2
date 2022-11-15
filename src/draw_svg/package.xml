@@ -15,6 +15,9 @@
   <depend>tf2_ros</depend>
   <depend>python3-lxml</depend>
   <depend>python3-tk</depend>
+  <depend>python-imaging</depend>
+  <depend>python-numpy</depend>
+  <depend>python3-pil.imagetk</depend>
   <depend>xarm_description</depend>
   <depend>xarm_moveit_config</depend>
   <!-- <depend>moveit_ros_planning_interface</depend> -->
