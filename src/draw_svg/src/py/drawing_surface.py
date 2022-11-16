@@ -55,6 +55,12 @@ class DrawingApp(tk.Tk):
         #self.img.putpixel((int(x), int(y)), (255, 0, 0))
         self.arr[x,y,1] = 0
         self.arr[x,y,2] = 0
+        self.arr[x+1,y,1] = 0
+        self.arr[x+1,y,2] = 0
+        self.arr[x+1,y+1,1] = 0
+        self.arr[x+1,y+1,2] = 0
+        self.arr[x,y+1,1] = 0
+        self.arr[x,y+1,2] = 0
         #print("Set x:{} y:{} to:{}".format(x,y,255))
 
     def draw_window(self):
