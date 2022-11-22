@@ -16,7 +16,7 @@ find_package(moveit_ros_planning_interface REQUIRED)
 # Install C++
 set(SRC_CPP_DIR src/cpp)
 # Example 0 - Follow target
-set(EXECUTABLE_0 log_position)
+set(EXECUTABLE_0 follow)
 add_executable(${EXECUTABLE_0} ${SRC_CPP_DIR}/${EXECUTABLE_0}.cpp)
 ament_target_dependencies(${EXECUTABLE_0}
     rclcpp

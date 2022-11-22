@@ -7,7 +7,7 @@ from launch.launch_description_sources import load_python_launch_file_as_module
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command, FindExecutable
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
@@ -109,14 +109,123 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
+    # URDF
+    _robot_description_xml = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']
+            ),
+            #PathJoinSubstitution(
+            #    [
+            #        FindPackageShare('xarm_description'),
+            #        "urdf",
+            #        "lite6",
+            #        #"lite6.urdf.xacro",
+            #        "lite6_robot_macro.xacro",
+            #    ]
+            #),
+            " ",
+            #"name:=", "lite6", " ",
+            "prefix:=", " ",
+            "hw_ns:=", hw_ns, " ",
+            "limited:=", limited, " ",
+            "effort_control:=", effort_control, " ",
+            "velocity_control:=", velocity_control, " ",
+            "add_gripper:=", add_gripper, " ",
+            "add_vacuum_gripper:=", add_vacuum_gripper, " ",
+            "dof:=", dof, " ",
+            "robot_type:=", robot_type, " ",
+            "ros2_control_plugin:=", ros2_control_plugin, " ",
+            #"ros2_control_params:=", ros2_control_params, " ",
+
+            "add_other_geometry:=", add_other_geometry, " ",
+            "geometry_type:=", geometry_type, " ",
+            "geometry_mass:=", geometry_mass, " ",
+            "geometry_height:=", geometry_height, " ",
+            "geometry_radius:=", geometry_radius, " ",
+            "geometry_length:=", geometry_length, " ",
+            "geometry_width:=", geometry_width, " ",
+            "geometry_mesh_filename:=", geometry_mesh_filename, " ",
+            "geometry_mesh_origin_xyz:=", geometry_mesh_origin_xyz, " ",
+            "geometry_mesh_origin_rpy:=", geometry_mesh_origin_rpy, " ",
+            "geometry_mesh_tcp_xyz:=", geometry_mesh_tcp_xyz, " ",
+            "geometry_mesh_tcp_rpy:=", geometry_mesh_tcp_rpy, " ",
+
+            #"robot_ip:=", robot_ip, " ",
+            #"report_type:=", report_type, " ",
+            #"baud_checkset:=", baud_checkset, " ",
+            #"default_gripper_baud:=", default_gripper_baud, " ",
+        ]
+    )
+    # TODO fix URDF loading
+    # xacro urdf/xarm_pen.urdf.xacro prefix:= hw_ns:=xarm dof:=6 limited:=false effort_control:=false velocity_control:=false add_gripper:=false add_vacuum_gripper:=false robot_type:=lite ros2_control_plugin:=gazebo_ros2_control/GazeboSystem add_other_geometry:=false geometry_type:=cylinder geometry_mass:=0.05 geometry_height:=0.1 geometry_radius:=0.005 geometry_length:=0.07 geometry_width:=0.1 geometry_mesh_filename:= geometry_mesh_origin_xyz:="0 0 0" geometry_mesh_origin_rpy:="0 0 0" geometry_mesh_tcp_xyz:="0 0 0" geometry_mesh_tcp_rpy:="0 0 0"
+    _robot_description_xml = Command(['cat ', PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'lite6.tmp.urdf'])])
+    robot_description = {"robot_description": _robot_description_xml}
+    # SRDF
+    _robot_description_semantic_xml = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare('xarm_moveit_config'),
+                    "srdf",
+                    #"_lite6_macro.srdf.xacro",
+                    "xarm.srdf.xacro",
+                ]
+            ),
+            " ",
+            #"name:=", "lite6", " ",
+            "prefix:=", " ",
+            #"hw_ns:=", hw_ns, " ",
+            #"limited:=", limited, " ",
+            #"effort_control:=", effort_control, " ",
+            #"velocity_control:=", velocity_control, " ",
+            #"add_gripper:=", add_gripper, " ",
+            #"add_vacuum_gripper:=", add_vacuum_gripper, " ",
+            "dof:=", dof, " ",
+            "robot_type:=", robot_type, " ",
+            #"ros2_control_plugin:=", ros2_control_plugin, " ",
+            #"ros2_control_params:=", ros2_control_params, " ",
+
+            #"add_other_geometry:=", add_other_geometry, " ",
+            #"geometry_type:=", geometry_type, " ",
+            #"geometry_mass:=", geometry_mass, " ",
+            #"geometry_height:=", geometry_height, " ",
+            #"geometry_radius:=", geometry_radius, " ",
+            #"geometry_length:=", geometry_length, " ",
+            #"geometry_width:=", geometry_width, " ",
+            #"geometry_mesh_filename:=", geometry_mesh_filename, " ",
+            #"geometry_mesh_origin_xyz:=", geometry_mesh_origin_xyz, " ",
+            #"geometry_mesh_origin_rpy:=", geometry_mesh_origin_rpy, " ",
+            #"geometry_mesh_tcp_xyz:=", geometry_mesh_tcp_xyz, " ",
+            #"geometry_mesh_tcp_rpy:=", geometry_mesh_tcp_rpy, " ",
+
+            #"robot_ip:=", robot_ip, " ",
+            #"report_type:=", report_type, " ",
+            #"baud_checkset:=", baud_checkset, " ",
+            #"default_gripper_baud:=", default_gripper_baud, " ",
+        ]
+    )
+    robot_description_semantic = {
+        "robot_description_semantic": _robot_description_semantic_xml
+    }
+
+
 
     nodes = [
         Node(
             package="draw_svg",
-            executable="follow.py",
+            executable="follow",
             output="log",
             arguments=["--ros-args", "--log-level", log_level],
-            parameters=[{"use_sim_time": use_sim_time}],
+            parameters=[
+                robot_description,
+                robot_description_semantic,
+                {"use_sim_time": use_sim_time},
+            ],
         ),
         Node(
             package="draw_svg",
@@ -134,10 +243,10 @@ def launch_setup(context, *args, **kwargs):
         ),
     ]
 
-    return nodes + [
+    return [
         robot_moveit_common_launch,
         robot_gazebo_launch,
-    ]
+    ] + nodes
 
 
 def generate_launch_description():
