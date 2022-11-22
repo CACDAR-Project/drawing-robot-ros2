@@ -154,6 +154,45 @@ def launch_setup(context, *args, **kwargs):
                 ],
             ))
 
+    #controllers_name = 'fake_controllers'
+    #no_gui_ctrl = True
+    #moveit_controller_manager_key = 'moveit_simple_controller_manager'
+    #moveit_controller_manager_value = 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
+    ## robot moveit common launch
+    ## xarm_moveit_config/launch/_robot_moveit_common.launch.py
+    #robot_moveit_common_launch = IncludeLaunchDescription(
+    #    PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('xarm_moveit_config'), 'launch', '_robot_moveit_common.launch.py'])),
+    #    launch_arguments={
+    #        'prefix': prefix,
+    #        'hw_ns': hw_ns,
+    #        'limited': limited,
+    #        'effort_control': effort_control,
+    #        'velocity_control': velocity_control,
+    #        'add_gripper': add_gripper,
+    #        # 'add_gripper': add_gripper if robot_type.perform(context) == 'xarm' else 'false',
+    #        'add_vacuum_gripper': add_vacuum_gripper,
+    #        'dof': dof,
+    #        'robot_type': robot_type,
+    #        'no_gui_ctrl': no_gui_ctrl,
+    #        'ros2_control_plugin': ros2_control_plugin,
+    #        'controllers_name': controllers_name,
+    #        'moveit_controller_manager_key': moveit_controller_manager_key,
+    #        'moveit_controller_manager_value': moveit_controller_manager_value,
+    #        'add_other_geometry': add_other_geometry,
+    #        'geometry_type': geometry_type,
+    #        'geometry_mass': geometry_mass,
+    #        'geometry_height': geometry_height,
+    #        'geometry_radius': geometry_radius,
+    #        'geometry_length': geometry_length,
+    #        'geometry_width': geometry_width,
+    #        'geometry_mesh_filename': geometry_mesh_filename,
+    #        'geometry_mesh_origin_xyz': geometry_mesh_origin_xyz,
+    #        'geometry_mesh_origin_rpy': geometry_mesh_origin_rpy,
+    #        'geometry_mesh_tcp_xyz': geometry_mesh_tcp_xyz,
+    #        'geometry_mesh_tcp_rpy': geometry_mesh_tcp_rpy,
+    #    }.items(),
+    #)
+
     return [
         RegisterEventHandler(
             event_handler=OnProcessExit(
@@ -163,6 +202,7 @@ def launch_setup(context, *args, **kwargs):
         ),
         gazebo_launch,
         robot_state_publisher_node,
+        #robot_moveit_common_launch,
         gazebo_spawn_entity_node,
     ]
 
