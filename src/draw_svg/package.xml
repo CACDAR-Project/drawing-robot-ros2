@@ -20,6 +20,7 @@
   <depend>python3-pil.imagetk</depend>
   <depend>xarm_description</depend>
   <depend>xarm_moveit_config</depend>
+  <!-- <depend>moveit_visual_tools</depend> -->
   <!-- <depend>moveit_ros_planning_interface</depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
