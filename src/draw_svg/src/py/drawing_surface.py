@@ -45,9 +45,17 @@ class DrawingApp(tk.Tk):
         self.read_queue()
 
         self.canvas = tk.Canvas(self,width=self.width,height=self.height)
+
+
         self.tk_image = ImageTk.PhotoImage(self.img)
         self.canvas.create_image(self.width/2,self.height/2,image=self.tk_image)
         self.canvas.pack(side='top', expand=True, fill='both')
+
+        def reset():
+            self.img = PImage.new("RGB", (self.width, self.height), (255, 255, 255))
+            self.arr = np.array(self.img)
+        tk.Button(self.canvas, text= "reset", command=reset).pack()
+
         self.draw_window()
 
     def draw(self,x,y,z):
