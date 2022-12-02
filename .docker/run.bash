@@ -75,6 +75,9 @@ GUI_ENVS=(
 # Synchronize timezone with host
 CUSTOM_VOLUMES+=("/etc/localtime:/etc/localtime:ro")
 
+# Pass USB devices to container
+USB_VOLUME+=("/dev/bus/usb:/dev/bus/usb")
+
 ## Additional environment variables
 # Synchronize ROS_DOMAIN_ID with host
 if [ -n "${ROS_DOMAIN_ID}" ]; then
@@ -111,6 +114,7 @@ DOCKER_RUN_CMD=(
     "${GPU_OPT}"
     "${GPU_ENVS[@]/#/"--env "}"
     "${CUSTOM_VOLUMES[@]/#/"--volume "}"
+    "${USB_VOLUME[@]/#/"--volume "}"
     "${CUSTOM_ENVS[@]/#/"--env "}"
     "${TAG}"
     "${CMD}"
