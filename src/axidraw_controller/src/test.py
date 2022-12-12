@@ -2,6 +2,7 @@
 from pyaxidraw import axidraw   # import module
 ad = axidraw.AxiDraw()          # Initialize class
 ad.interactive()                # Enter interactive context
+ad.options.port = "/dev/ttyAXI"
 if not ad.connect():            # Open serial port to AxiDraw;
     quit()                      #   Exit, if no connection.
 ad.options.units = 1            # set working units to cm.

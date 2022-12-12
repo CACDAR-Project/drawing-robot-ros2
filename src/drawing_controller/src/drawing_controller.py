@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Example that uses MoveIt 2 to follow a target inside Ignition Gazebo"""
+"""Sends motions individually to robot_controller"""
 
 import rclpy
 from geometry_msgs.msg import Pose, PoseStamped
-from pymoveit2 import MoveIt2
-from pymoveit2.robots import panda
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -51,11 +49,11 @@ def map_point_function(x_pixels, y_pixels, xlim_lower, xlim_upper, ylim_lower, y
     return map_point
 
 
-class PublishTarget(Node):
+class DrawingController(Node):
     def __init__(self):
-        super().__init__('publisher')
+        super().__init__('drawing_controller')
         self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
-        timer_period = 4.0  # seconds
+        timer_period = 7.0  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
@@ -66,7 +64,7 @@ class PublishTarget(Node):
         #print(p.orientation)
         xml = ET.parse('svg/test.svg')
         svg = xml.getroot()
-        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.2, 0.4, -0.1, 0.1)
+        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.1, 0.5, -0.2, 0.2)
         self.points = []
         for child in svg:
             if (child.tag == 'line'):
