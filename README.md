@@ -27,4 +27,7 @@ apt-mark hold libraspberrypi-bin libraspberrypi-dev libraspberrypi-doc libraspbe
 apt-mark hold raspberrypi-bootloader raspberrypi-kernel raspberrypi-kernel-headers
 
 apt update && apt upgrade
+
+
+apt install ros-dev-tools
 ```
