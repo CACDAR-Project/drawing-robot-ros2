@@ -7,9 +7,8 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(robot_interfaces REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -22,16 +21,11 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(robot_interfaces REQUIRED)
-
-#add_executable(robotcontroller src/robotcontroller.cpp)
-#ament_target_dependencies(robotcontroller rclcpp robot_interfaces)
+add_executable(robot_controller src/cpp/robot_controller.cpp)
+ament_target_dependencies(robot_controller rclcpp robot_interfaces)
 
 install(TARGETS
-  talker
-  listener
+  robot_controller
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
