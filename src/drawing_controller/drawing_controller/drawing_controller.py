@@ -59,7 +59,7 @@ class DrawingController(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
-        self.cli = self.create_client(ExecuteMotion, 'dummy_execute_path')
+        self.cli = self.create_client(ExecuteMotion, 'execute_path')
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('service not available, waiting again...')
         self.req = ExecuteMotion.Request()
