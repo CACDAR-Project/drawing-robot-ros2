@@ -81,33 +81,32 @@ class DummyController : public RobotController
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
   {
     RCLCPP_INFO(this->get_logger(), "Executing goal");
-    rclcpp::Rate loop_rate(1);
+    rclcpp::Rate loop_rate(20);
     const auto goal = goal_handle->get_goal();
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
-    auto status = feedback->status;
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();
 
 
-    for (int i = 1; (i < 100) && rclcpp::ok(); ++i) {
+    for (int i = 1; (i <= 10) && rclcpp::ok(); ++i) {
       // Check if there is a cancel request
       if (goal_handle->is_canceling()) {
-        result->result = status;
+        result->result = feedback->status;
         goal_handle->canceled(result);
         RCLCPP_INFO(this->get_logger(), "Goal canceled");
         return;
       }
       // Update status
-      status = i + "/100 complete";
+      feedback->status = std::to_string(i) + "/10 complete";
       // Publish feedback
       goal_handle->publish_feedback(feedback);
-      RCLCPP_INFO(this->get_logger(), "Publish feedback");
+      RCLCPP_INFO(this->get_logger(), feedback->status.c_str());
 
       loop_rate.sleep();
     }
 
     // Check if goal is done
     if (rclcpp::ok()) {
-      result->result = status;
+      result->result = "success";
       goal_handle->succeed(result);
       RCLCPP_INFO(this->get_logger(), "Goal succeeded");
     }

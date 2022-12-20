@@ -11,8 +11,11 @@ import math
 #from tf2_ros.transformations import quaternion_from_euler
 import lxml.etree as ET
 
-from robot_interfaces.srv import ExecuteMotion
+from rclpy.action import ActionClient
+from robot_interfaces.action import ExecuteMotion
+from robot_interfaces.msg import Motion
 import sys
+from copy import deepcopy
 
 def quaternion_from_euler(ai, aj, ak):
     ai /= 2.0
@@ -59,52 +62,68 @@ class DrawingController(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
-        self.cli = self.create_client(ExecuteMotion, 'execute_path')
-        while not self.cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('service not available, waiting again...')
-        self.req = ExecuteMotion.Request()
+        self._action_client = ActionClient(self, ExecuteMotion, 'execute_motion')
 
-        # TODO get dimensions from svg
-
-        #print(p)
-        #print(p.position)
-        #print(p.orientation)
         xml = ET.parse(svgpath)
         svg = xml.getroot()
         self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.1, 0.5, -0.2, 0.2)
-        self.points = []
+        self.lines = []
         for child in svg:
             if (child.tag == 'line'):
-                self.points.append((float(child.get('x1')), float(child.get('y1'))))
-                self.points.append((float(child.get('x2')), float(child.get('y2'))))
+                p1 = (float(child.get('x1')), float(child.get('y1')))
+                p2 = (float(child.get('x2')), float(child.get('y2')))
+                self.lines.append((p1,p2))
 
+    def send_goal(self, motion):
+        goal_msg = ExecuteMotion.Goal()
+        goal_msg.motion = motion
 
-    def timer_callback(self):
-        next_point = self.points[self.i]
-        point = self.map_point(float(next_point[0]),float(next_point[1]))
+        self._action_client.wait_for_server()
+
+        self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+
+        self._send_goal_future.add_done_callback(self.goal_response_callback)
+
+    def goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected :(')
+            return
+
+        self.get_logger().info('Goal accepted :)')
+
+        self._get_result_future = goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(self.get_result_callback)
+
+    def get_result_callback(self, future):
+        result = future.result().result
+        self.get_logger().info('Result: {0}'.format(result))
+
+    def feedback_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+        self.get_logger().info('Received feedback: {0}'.format(feedback))
+
+    def append_point(self, motion, point):
         p = Pose()
         p.position.x = point[0]
         p.position.y = point[1]
         p.position.z = 0.1
         q = quaternion_from_euler(0.0, math.pi, 0.0)
-        #p.orientation = q
         p.orientation.x = q[0]
         p.orientation.y = q[1]
         p.orientation.z = q[2]
         p.orientation.w = q[3]
         ps = PoseStamped()
-        ps.pose = p
-        #print(ps)
-        #self.publisher_.publish(ps)
-        #self.get_logger().info('Publishing to /target_pose: "%s"' % p)
-        self.i = (self.i + 1) % len(self.points)
+        motion.path.append(ps)
 
-        #self.req.a = a
-        #self.req.b = b
-        self.future = self.cli.call_async(self.req)
-        #rclpy.spin_until_future_complete(self, self.future)
-        self.get_logger().info('Got result: "%s"' % self.future.result())
-        #return self.future.result()
+    def timer_callback(self):
+        next_line = self.lines[self.i]
+        motion = Motion()
+        self.append_point(motion, self.map_point(float(next_line[0][0]),float(next_line[0][1])))
+        self.append_point(motion, self.map_point(float(next_line[1][0]),float(next_line[1][1])))
+        self.i = (self.i + 1) % len(self.lines)
+
+        self.send_goal(motion)
 
 
 def main(args=None):
@@ -113,13 +132,7 @@ def main(args=None):
     dc = DrawingController(sys.argv[1])
 
     rclpy.spin(dc)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    publisher.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == "__main__":
     main()
