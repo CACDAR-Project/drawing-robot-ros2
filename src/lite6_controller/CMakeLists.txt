@@ -22,4 +22,16 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+find_package(robot_controller REQUIRED)
+find_package(rclcpp REQUIRED)
+
+find_package(geometry_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Motion.msg"
+  "srv/ExecuteMotion.srv"
+  DEPENDENCIES geometry_msgs # Add packages that above messages depend on
+)
+
 ament_package()

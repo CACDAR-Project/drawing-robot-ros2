@@ -29,6 +29,7 @@ find_package(rclcpp REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Motion.msg"
   "srv/ExecuteMotion.srv"
+  "action/ExecuteMotion.action"
   DEPENDENCIES geometry_msgs # Add packages that above messages depend on
 )
 
