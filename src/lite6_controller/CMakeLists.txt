@@ -7,9 +7,19 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(robot_interfaces REQUIRED)
+find_package(robot_controller REQUIRED)
+find_package(moveit REQUIRED)
+find_package(moveit_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+
+find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(moveit_ros_planning_interface REQUIRED)
+find_package(Eigen3 REQUIRED)
+include_directories(include  ${Boost_INCLUDE_DIR} ${EIGEN_INCLUDE_DIRS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -22,16 +32,24 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-find_package(robot_controller REQUIRED)
-find_package(rclcpp REQUIRED)
+add_executable(lite6_controller src/lite6_controller.cpp)
+ament_target_dependencies(lite6_controller
+  "rclcpp"
+  "rclcpp_action"
+  "Eigen3"
+  "robot_controller"
+  "moveit_ros_planning_interface"
+  "robot_interfaces")
 
-find_package(geometry_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Motion.msg"
-  "srv/ExecuteMotion.srv"
-  DEPENDENCIES geometry_msgs # Add packages that above messages depend on
-)
+install(TARGETS
+  lite6_controller
+  DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

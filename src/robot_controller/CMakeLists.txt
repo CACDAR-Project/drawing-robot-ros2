@@ -15,19 +15,43 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(robot_interfaces REQUIRED)
 
-add_executable(robot_controller src/cpp/robot_controller.cpp)
+include_directories(include)
+
+add_library(robot_controller src/cpp/robot_controller.cpp)
+add_executable(dummy_controller src/cpp/dummy_controller.cpp)
 ament_target_dependencies(robot_controller
   "rclcpp"
   "rclcpp_action"
   "robot_interfaces")
+ament_target_dependencies(dummy_controller
+  "rclcpp"
+  "rclcpp_action"
+  "robot_interfaces")
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-endif()
+ament_export_targets(robot_controller HAS_LIBRARY_TARGET)
 
-install(TARGETS
-  robot_controller
+install(
+  DIRECTORY include/robot_controller
+  DESTINATION include/
+)
+install(
+  TARGETS robot_controller
+  EXPORT robot_controller
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+#if(BUILD_TESTING)
+#  find_package(ament_lint_auto REQUIRED)
+#  ament_lint_auto_find_test_dependencies()
+#endif()
+
+install(
+  TARGETS dummy_controller
   DESTINATION lib/${PROJECT_NAME})
+
+
 
 ament_package()
