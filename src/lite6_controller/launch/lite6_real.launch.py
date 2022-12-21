@@ -314,8 +314,8 @@ def launch_setup(context, *args, **kwargs):
 
     nodes = [
         Node(
-            package="draw_svg",
-            executable="follow",
+            package="lite6_controller",
+            executable="lite6_controller",
             output="log",
             arguments=["--ros-args", "--log-level", log_level],
             parameters=[
@@ -326,13 +326,6 @@ def launch_setup(context, *args, **kwargs):
                 robot_description_parameters,
                 {"use_sim_time": use_sim_time},
             ],
-        ),
-        Node(
-            package="draw_svg",
-            executable="draw_svg.py",
-            output="log",
-            arguments=["--ros-args", "--log-level", log_level],
-            parameters=[{"use_sim_time": use_sim_time}],
         ),
     ]
 
