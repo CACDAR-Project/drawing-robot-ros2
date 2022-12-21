@@ -61,9 +61,9 @@ public:
 
     // dangerous with real robot
     // https://moveit.picknik.ai/galactic/doc/examples/move_group_interface/move_group_interface_tutorial.html
-    const double jump_threshold = 0.0;
+    const double jump_threshold = 0.00001;
 
-    const double eef_step = 0.01;
+    const double eef_step = 0.000001;
     double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
 
