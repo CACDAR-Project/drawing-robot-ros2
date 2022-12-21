@@ -2,7 +2,7 @@
 """Sends motions individually to robot_controller"""
 
 import rclpy
-from geometry_msgs.msg import Pose, PoseStamped
+from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -103,26 +103,35 @@ class DrawingController(Node):
         feedback = feedback_msg.feedback
         self.get_logger().info('Received feedback: {0}'.format(feedback))
 
-    def append_point(self, motion, point):
+    def append_point(self, motion, point, height):
         p = Pose()
+        #self.get_logger().info('Appending point:{} {}'.format(point[0], point[1]))
         p.position.x = point[0]
         p.position.y = point[1]
-        p.position.z = 0.1
+        p.position.z = height
         q = quaternion_from_euler(0.0, math.pi, 0.0)
+        p.orientation = Quaternion()
         p.orientation.x = q[0]
         p.orientation.y = q[1]
         p.orientation.z = q[2]
         p.orientation.w = q[3]
         ps = PoseStamped()
+        ps.pose = p
         motion.path.append(ps)
 
     def timer_callback(self):
         next_line = self.lines[self.i]
         motion = Motion()
-        self.append_point(motion, self.map_point(float(next_line[0][0]),float(next_line[0][1])))
-        self.append_point(motion, self.map_point(float(next_line[1][0]),float(next_line[1][1])))
+        p1 = self.map_point(next_line[0][0],next_line[0][1])
+        p2 = self.map_point(next_line[1][0],next_line[1][1])
+        self.get_logger().info('Drawing line with p1:{} p2:{}'.format(p1,p2))
+        self.append_point(motion, p1, 0.5)
+        self.append_point(motion, p1, 0.1)
+        self.append_point(motion, p2, 0.1)
+        self.append_point(motion, p2, 0.5)
         self.i = (self.i + 1) % len(self.lines)
 
+        self.get_logger().info('Executing motion:{}'.format(motion.path))
         self.send_goal(motion)
 
 

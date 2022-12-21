@@ -24,6 +24,13 @@ class DummyController : public RobotController
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();
 
+    for (auto p : goal->motion.path)
+    {
+      auto pp = p.pose;
+      RCLCPP_INFO(this->get_logger(), "Position x:%f y:%f z:%f",pp.position.x,pp.position.y,pp.position.z);
+      RCLCPP_INFO(this->get_logger(), "Orientation w:%f x:%f y:%f z:%f", pp.orientation.w, pp.orientation.x,pp.orientation.y,pp.orientation.z);
+      //  W:%f X:%f Y:%f Z:%f
+    }
 
     for (int i = 1; (i <= 10) && rclcpp::ok(); ++i) {
       // Check if there is a cancel request
