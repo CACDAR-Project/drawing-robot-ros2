@@ -16,6 +16,7 @@
   <depend>moveit_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>moveit_ros_planning_interface</depend>
+  <depend>tf2_ros</depend>
 
   <build_depend>eigen</build_depend>
   <build_depend>geometric_shapes</build_depend>
