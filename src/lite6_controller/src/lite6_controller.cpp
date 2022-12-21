@@ -30,6 +30,7 @@ public:
     // Subscribe to target pose
     //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
 
+    move_group.setPlanningTime(30.0);
     RCLCPP_INFO(this->get_logger(), "Initialization successful.");
 
   }
@@ -61,7 +62,7 @@ public:
 
     // dangerous with real robot
     // https://moveit.picknik.ai/galactic/doc/examples/move_group_interface/move_group_interface_tutorial.html
-    const double jump_threshold = 0.00001;
+    const double jump_threshold = 0.0;
 
     const double eef_step = 0.000001;
     double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
