@@ -53,6 +53,7 @@ public:
 
     std::vector<geometry_msgs::msg::Pose> waypoints;
 
+    waypoints.push_back(move_group.getCurrentPose().pose);
     for (auto p : goal->motion.path)
       waypoints.push_back(p.pose);
 
