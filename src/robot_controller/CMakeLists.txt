@@ -18,11 +18,11 @@ find_package(robot_interfaces REQUIRED)
 include_directories(include)
 
 add_library(robot_controller src/cpp/robot_controller.cpp)
-add_executable(dummy_controller src/cpp/dummy_controller.cpp)
 ament_target_dependencies(robot_controller
   "rclcpp"
   "rclcpp_action"
   "robot_interfaces")
+add_executable(dummy_controller src/cpp/dummy_controller.cpp)
 ament_target_dependencies(dummy_controller
   "rclcpp"
   "rclcpp_action"

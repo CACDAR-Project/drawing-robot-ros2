@@ -1,0 +1,6 @@
+# Status service
+# Provide a resource and recieve the status of that resource
+
+string resource
+---
+string status

@@ -23,14 +23,17 @@ if(BUILD_TESTING)
 endif()
 
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Motion.msg"
+  "msg/Points.msg"
   "srv/ExecuteMotion.srv"
+  "srv/Status.srv"
   "action/ExecuteMotion.action"
-  DEPENDENCIES geometry_msgs # Add packages that above messages depend on
+  DEPENDENCIES geometry_msgs std_msgs # Add packages that above messages depend on
 )
 
 ament_package()
