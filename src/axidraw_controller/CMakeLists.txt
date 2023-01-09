@@ -29,6 +29,11 @@ ament_target_dependencies(axidraw_controller
     "robot_interfaces"
 )
 
+
+install(TARGETS
+  axidraw_controller
+  DESTINATION lib/${PROJECT_NAME})
+
 install(PROGRAMS
     src/py/axidraw_serial.py
     DESTINATION lib/${PROJECT_NAME}

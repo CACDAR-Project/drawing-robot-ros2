@@ -8,6 +8,7 @@ from std_msgs.msg import Empty
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile
 
 
 #TODO delete this
@@ -54,10 +55,10 @@ class AxidrawSerial(Node):
         while not self.init_serial(port):
             self.get_logger().error("Failed to connect to axidraw on port:{}".format(port))
 
-        self.move_sub = self.create_subscription(Point, 'axidraw_move', move_callback)
-        self.penup_sub = self.create_subscription(Empty, 'axidraw_penup', penup_callback)
-        self.pendown_sub = self.create_subscription(Empty, 'axidraw_pendown', pendown_callback)
-        self.path_sub = self.create_subscription(Points, 'axidraw_path', stroke_callback)
+        self.move_sub = self.create_subscription(Point, 'axidraw_move', self.move_callback, qos_profile=QoSProfile(depth=1))
+        self.penup_sub = self.create_subscription(Empty, 'axidraw_penup', self.penup_callback, qos_profile=QoSProfile(depth=1))
+        self.pendown_sub = self.create_subscription(Empty, 'axidraw_pendown', self.pendown_callback, qos_profile=QoSProfile(depth=1))
+        self.path_sub = self.create_subscription(Points, 'axidraw_path', self.stroke_callback, qos_profile=QoSProfile(depth=1))
 
     def get_status(self, request, response):
         response.status = status.get(request.resource, "Resource '{}' not found.".format(request.resource))
@@ -93,7 +94,7 @@ class AxidrawSerial(Node):
         self.ad.pendown()
         self.set_ready()
 
-    def path_callback(self, msg):
+    def stroke_callback(self, msg):
         self.set_busy()
 
         self.get_logger().info("Received path: {}".format(msg))
