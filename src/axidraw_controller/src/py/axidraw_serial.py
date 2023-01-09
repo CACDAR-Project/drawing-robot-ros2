@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from pyaxidraw import axidraw
 
-from robot_interfaces.srv import Status, Points
+from robot_interfaces.srv import Status
+from robot_interfaces.msg import Points
 from geometry_msgs.msg import Point
 from std_msgs.msg import Empty
 
