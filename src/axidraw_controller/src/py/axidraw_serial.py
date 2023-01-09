@@ -48,8 +48,12 @@ class AxidrawSerial(Node):
         self.status["motion"] = "ready"
         return True
 
-    def __init__(self, port="/dev/ttyACM0"):
+    def __init__(self):
         super().__init__('axidraw_serial')
+
+        self.declare_parameter('serial_port', '/dev/ttyACM0')
+        port = self.get_parameter('serial_port').get_parameter_value().string_value
+
         self.status_srv = self.create_service(Status, 'axidraw_status', self.get_status)
 
         while not self.init_serial(port):
