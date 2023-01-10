@@ -58,7 +58,7 @@ class DrawingController(Node):
     def __init__(self, svgpath):
         super().__init__('drawing_controller')
         #self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
-        timer_period = 7.0  # seconds
+        timer_period = 20.0  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
@@ -125,10 +125,10 @@ class DrawingController(Node):
         p1 = self.map_point(next_line[0][0],next_line[0][1])
         p2 = self.map_point(next_line[1][0],next_line[1][1])
         self.get_logger().info('Drawing line with p1:{} p2:{}'.format(p1,p2))
-        self.append_point(motion, p1, 0.5)
+        self.append_point(motion, p1, 0.2)
         self.append_point(motion, p1, 0.1)
         self.append_point(motion, p2, 0.1)
-        self.append_point(motion, p2, 0.5)
+        self.append_point(motion, p2, 0.2)
         self.i = (self.i + 1) % len(self.lines)
 
         self.get_logger().info('Executing motion:{}'.format(motion.path))

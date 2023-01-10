@@ -54,7 +54,7 @@ public:
 
     std::vector<geometry_msgs::msg::Pose> waypoints;
 
-    waypoints.push_back(move_group.getCurrentPose().pose);
+    //waypoints.push_back(move_group.getCurrentPose().pose);
     for (auto p : goal->motion.path)
       waypoints.push_back(p.pose);
 
@@ -64,7 +64,7 @@ public:
     // https://moveit.picknik.ai/galactic/doc/examples/move_group_interface/move_group_interface_tutorial.html
     const double jump_threshold = 0.0;
 
-    const double eef_step = 0.000001;
+    const double eef_step = 0.001;
     double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
 
