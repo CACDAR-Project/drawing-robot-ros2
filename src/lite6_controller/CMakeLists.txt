@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(robot_interfaces REQUIRED)
 find_package(robot_controller REQUIRED)

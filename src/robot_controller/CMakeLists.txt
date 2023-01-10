@@ -13,6 +13,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(robot_interfaces REQUIRED)
 
 include_directories(include)
@@ -20,11 +21,13 @@ include_directories(include)
 add_library(robot_controller src/cpp/robot_controller.cpp)
 ament_target_dependencies(robot_controller
   "rclcpp"
+  "rclcpp_components"
   "rclcpp_action"
   "robot_interfaces")
 add_executable(dummy_controller src/cpp/dummy_controller.cpp)
 ament_target_dependencies(dummy_controller
   "rclcpp"
+  "rclcpp_components"
   "rclcpp_action"
   "robot_interfaces")
 

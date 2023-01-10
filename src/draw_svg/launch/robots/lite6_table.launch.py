@@ -59,8 +59,8 @@ def launch_setup(context, *args, **kwargs):
     get_xacro_file_content = getattr(mod, 'get_xacro_file_content')
     robot_description = {
         'robot_description': get_xacro_file_content(
-            #xacro_file=PathJoinSubstitution([FindPackageShare('xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
-            xacro_file=PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']),
+            xacro_file=PathJoinSubstitution([FindPackageShare('xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
+            #xacro_file=PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']),
             arguments={
                 'prefix': prefix,
                 'dof': dof,

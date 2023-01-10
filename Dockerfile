@@ -1,4 +1,4 @@
-ARG ROS_DISTRO=galactic
+ARG ROS_DISTRO=humble
 FROM ros:${ROS_DISTRO}-ros-base
 
 ### Use bash by default
@@ -22,7 +22,11 @@ RUN apt-get update && \
 
 ### Install extra dependencies
 RUN apt-get update && \
-    apt-get install -yq python3-pil.imagetk
+    apt-get install -yq python3-pil.imagetk && \
+    apt-get install -yq ros-${ROS_DISTRO}-pilz-industrial-motion-planner && \
+    apt-get install -yq tmux && \
+    apt-get install -yq ros-${ROS_DISTRO}-desktop && \
+    apt-get install -yq ros-${ROS_DISTRO}-rclcpp-components
 
 ### Install AxiDraw
 RUN apt-get update && \

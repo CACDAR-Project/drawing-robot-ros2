@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Example that uses MoveIt 2 to follow a target inside Ignition Gazebo"""
+"""GUI for virtual drawing surface"""
 
 import rclpy
 from geometry_msgs.msg import Pose, PoseWithCovariance, Point
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image as SensorImage
-from pymoveit2 import MoveIt2
 from robots import lite6
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
