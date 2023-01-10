@@ -27,31 +27,9 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 
-# Install C++ examples
-set(EXAMPLES_CPP_DIR examples/cpp)
-# Example 0 - Follow target
-set(EXECUTABLE_0 ex_follow_target)
-add_executable(${EXECUTABLE_0} ${EXAMPLES_CPP_DIR}/${EXECUTABLE_0}.cpp)
-ament_target_dependencies(${EXECUTABLE_0}
-    rclcpp
-    geometry_msgs
-    moveit_ros_planning_interface
-)
-install(TARGETS
-    ${EXECUTABLE_0}
-    DESTINATION lib/${PROJECT_NAME}
-)
-
-# Install Python examples
-set(EXAMPLES_PY_DIR examples/py)
-install(PROGRAMS
-    ${EXAMPLES_PY_DIR}/ex_follow_target.py
-    ${EXAMPLES_PY_DIR}/ex_throw_object.py
-    DESTINATION lib/${PROJECT_NAME}
-)
 
 # Install directories
-install(DIRECTORY launch rviz worlds DESTINATION share/${PROJECT_NAME})
+#install(DIRECTORY launch rviz worlds DESTINATION share/${PROJECT_NAME})
 
 # Setup the project
 ament_package()
