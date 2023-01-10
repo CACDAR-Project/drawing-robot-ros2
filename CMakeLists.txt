@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ign_moveit2_examples)
+project(drawing-robot-ros2)
 
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
