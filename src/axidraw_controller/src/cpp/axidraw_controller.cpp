@@ -48,6 +48,7 @@ class AxidrawController : public RobotController
     path_pub = this->create_publisher<robot_interfaces::msg::Points>("axidraw_path", 10);
   }
 
+  // Return true if axidraw is ready
   bool is_ready()
   {
     auto request = std::make_shared<robot_interfaces::srv::Status::Request>();
@@ -85,6 +86,7 @@ class AxidrawController : public RobotController
     return point;
   }
 
+  // Translate all poses in a vector
   std::vector<geometry_msgs::msg::Point> translate_poses(std::vector<geometry_msgs::msg::PoseStamped> ps)
   {
     std::vector<geometry_msgs::msg::Point> points;

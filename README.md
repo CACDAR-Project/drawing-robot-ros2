@@ -7,6 +7,7 @@ Requirements:
 - python3-pil.imagetk
 - ros-humble-moveit
 - ros-humble-ros-gz
+- ignition-fortress
 
 ``` sh
 ./rebuild.sh
