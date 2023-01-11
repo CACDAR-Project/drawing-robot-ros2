@@ -1,10 +1,8 @@
-# Axidraw controller
+# axidraw controller
 
-## High-level python api
+Implements robot_controller for the Axidraw robot.
 
-https://axidraw.com/doc/py_api/
+`axidraw_serial.py` is used to communicate with the robot using the python API.
+If more direct control is desired, this can be implemented by sending serial commands directly to the [EBB control board](http://evil-mad.github.io/EggBot/ebb.html) of the Axidraw.
 
-## Low-level serial API
-
-Can be used to send commands directly to the Axidraw controller board over serial.
-http://evil-mad.github.io/EggBot/ebb.html
+On linux systems the board appears on `/dev/ttyACM0`.
