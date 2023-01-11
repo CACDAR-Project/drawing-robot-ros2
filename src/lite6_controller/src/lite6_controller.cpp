@@ -8,10 +8,26 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/msg/collision_object.hpp>
 
+#include <moveit/planning_interface/planning_interface.h>
+#include <moveit/planning_interface/planning_response.h>
+//#include <moveit/kinematic_constraints/kinematic_constraint.h>
+#include <moveit/kinematic_constraints/utils.h>
+
+#include <moveit_msgs/msg/constraints.hpp>
+#include <moveit_msgs/msg/motion_plan_request.hpp>
+#include <moveit_msgs/msg/motion_sequence_request.hpp>
+#include <moveit_msgs/msg/motion_sequence_item.hpp>
+
 #include <pilz_industrial_motion_planner/command_list_manager.h>
 
 const std::string MOVE_GROUP = "lite6";
 
+
+
+// MOTION PLANNING API
+// https://github.com/ros-planning/moveit2_tutorials/blob/humble/doc/examples/motion_planning_api/src/motion_planning_api_tutorial.cpp
+// https://moveit.picknik.ai/humble/doc/examples/motion_planning_api/motion_planning_api_tutorial.html
+// https://github.com/ros-planning/moveit2/blob/main/moveit_planners/pilz_industrial_motion_planner/src/move_group_sequence_service.cpp
 //
 class Lite6Controller : public RobotController
 {
@@ -47,6 +63,25 @@ public:
 
   }
 
+  planning_interface::MotionPlanRequest createRequest(geometry_msgs::msg::PoseStamped pose)
+  {
+    planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
+    mpr.planner_id = "PTP";
+    //mpr.goal_constraints.position_constraints.header.frame_id = "world";
+
+    // A tolerance of 0.01 m is specified in position
+    // and 0.01 radians in orientation
+    std::vector<double> tolerance_pose(3, 0.01);
+    std::vector<double> tolerance_angle(3, 0.01);
+
+    mpr.group_name = MOVE_GROUP;
+    moveit_msgs::msg::Constraints pose_goal =
+      kinematic_constraints::constructGoalConstraints("link_eef", pose, tolerance_pose, tolerance_angle);
+
+    mpr.goal_constraints.push_back(pose_goal);
+    return mpr;
+  }
+
   // TODO implement time param
   // https://moveit.picknik.ai/foxy/doc/move_group_interface/move_group_interface_tutorial.html
   // https://groups.google.com/g/moveit-users/c/MOoFxy2exT4
@@ -65,21 +100,20 @@ public:
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();
 
-    std::vector<geometry_msgs::msg::Pose> waypoints;
-
+    moveit_msgs::msg::MotionSequenceRequest msr;
     //waypoints.push_back(move_group.getCurrentPose().pose);
     for (auto p : goal->motion.path)
-      waypoints.push_back(p.pose);
+    {
+      moveit_msgs::msg::MotionSequenceItem msi;
+      msi.req = createRequest(p);
+      msi.blend_radius = 0.001; //TODO make configurable
+      msr.items.push_back(msi);
+    }
 
     moveit_msgs::msg::RobotTrajectory trajectory;
 
-    // dangerous with real robot
-    // https://moveit.picknik.ai/galactic/doc/examples/move_group_interface/move_group_interface_tutorial.html
-    const double jump_threshold = 0.0;
-
-    const double eef_step = 0.001;
-    double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-    RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
+    //double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+    //RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
 
     this->move_group.execute(trajectory);
 
