@@ -6,7 +6,7 @@
 ./rebuild.sh
 ```
 ``` sh
-source src//install/local_setup.bash
+source src/install/local_setup.bash
 ```
 
 ## Running
@@ -31,10 +31,27 @@ or
 ros2 launch lite6_controller lite6_real_no_gui.launch.py
 ```
 
-And simultaneously run
+And simultaneously (using tmux or another terminal) run
 ``` sh
 ros2 run drawing_controller drawing_controller src/draw_svg/svg/test.svg
 ```
+## Docker
+### Build container
+
+``` sh
+bash .docker/build.bash
+```
+
+### Run built container
+``` sh
+bash .docker/run.bash
+```
+
+If active changes are being made, run:
+``` sh
+bash .docker/devel.bash
+```
+This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
 ## ROS2 rpi4
 https://github.com/ros-realtime/ros-realtime-rpi4-image/releases
 
@@ -61,7 +78,7 @@ adduser ubuntu dialout #give access to serial devices (axidraw)
 ### Misc commands
 ``` sh
 apt update
-apt install tmux python3-colcon-ros python3-pip ros-humble-moveit
+apt install git tmux python3-colcon-ros python3-pip ros-humble-moveit
 ``` 
 
 ``` sh
