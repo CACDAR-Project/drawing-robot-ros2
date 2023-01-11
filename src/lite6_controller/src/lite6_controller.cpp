@@ -89,6 +89,13 @@ public:
 
   // TODO implement feedback
   // https://answers.ros.org/question/249995/how-to-check-sate-of-plan-execution-in-moveit-during-async-execution-in-python/
+  //
+  // Useful
+  // https://groups.google.com/g/moveit-users/c/I4sPhq_JGQk
+  // https://groups.google.com/g/moveit-users/c/MOoFxy2exT4/m/0AwRHOuEwRgJ
+  // https://discourse.ros.org/t/moveit-trajectory-through-waypoints/17439
+  // https://answers.ros.org/question/330632/moveit-motion-planning-how-should-i-splice-several-planned-motion-trajectories/
+  // https://groups.google.com/g/moveit-users/c/lZL2HTjLu-k
 
   /// Callback that executes path on robot
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
