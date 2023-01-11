@@ -1,6 +1,6 @@
 #!/bin/bash
 
-touch import
+mkdir import
 vcs import --recursive import < drawing_robot_ros2.repos
 sudo rosdep init
 rosdep update
