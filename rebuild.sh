@@ -1,6 +1,8 @@
 #!/bin/bash
 
+touch import
 vcs import --recursive import < drawing_robot_ros2.repos
+sudo rosdep init
 rosdep update
 rosdep install -y -r -i --rosdistro "humble" --from-paths import
 source "/opt/ros/humble/setup.bash"
