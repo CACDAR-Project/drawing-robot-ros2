@@ -2,6 +2,11 @@
 
 ## Building
 
+Requirements:
+- python3-pip 
+- python3-pil.imagetk
+- ros-humble-moveit
+
 ``` sh
 ./rebuild.sh
 ```
