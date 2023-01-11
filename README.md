@@ -6,6 +6,7 @@ Requirements:
 - python3-pip 
 - python3-pil.imagetk
 - ros-humble-moveit
+- ros-humble-ros-gz
 
 ``` sh
 ./rebuild.sh
