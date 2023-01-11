@@ -14,9 +14,14 @@ if [ "${#}" -gt "0" ]; then
     fi
 fi
 
-#docker build
+CONTAINER_CMD="podman build --format docker"
+if ! [ -x "$(command -v podman)" ]; then
+  echo 'podman not installed, using docker' >&2
+  CONTAINER_CMD="docker build"
+fi
+
 DOCKER_BUILD_CMD=(
-    podman build --format docker
+    "${CONTAINER_CMD}"
     "${PROJECT_DIR}"
     --tag "${TAG}"
     "${BUILD_ARGS}"
