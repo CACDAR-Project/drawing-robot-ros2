@@ -13,6 +13,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(robot_interfaces REQUIRED)
 find_package(robot_controller REQUIRED)
 find_package(moveit REQUIRED)
+find_package(pilz_industrial_motion_planner REQUIRED)
 find_package(moveit_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
@@ -38,6 +39,7 @@ ament_target_dependencies(lite6_controller
   "rclcpp"
   "rclcpp_action"
   "Eigen3"
+  "pilz_industrial_motion_planner"
   "robot_controller"
   "moveit_ros_planning_interface"
   "robot_interfaces")

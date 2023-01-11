@@ -8,6 +8,8 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/msg/collision_object.hpp>
 
+#include <pilz_industrial_motion_planner/command_list_manager.h>
+
 const std::string MOVE_GROUP = "lite6";
 
 //
@@ -18,11 +20,21 @@ public:
   moveit::planning_interface::MoveGroupInterface move_group;
 
   //bool moved = false;
+  //
+  // TODO get pilz working
+  //std::unique_ptr<pilz_industrial_motion_planner::CommandListManager> command_list_manager_;
+  // command_list_manager_ = std::make_unique<pilz_industrial_motion_planner::CommandListManager>(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
+  pilz_industrial_motion_planner::CommandListManager command_list_manager;
+  //pilz_industrial_motion_planner::CommandListManager command_list_manager(*std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
 
   Lite6Controller(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
     : RobotController(options),
-      move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP)
+      move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP),
+      command_list_manager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel())
   {
+
+    //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
+    //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
     // Use upper joint velocity and acceleration limits
     //this->move_group.setMaxAccelerationScalingFactor(1.0);
     //this->move_group.setMaxVelocityScalingFactor(1.0);
@@ -46,6 +58,7 @@ public:
   /// Callback that executes path on robot
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
   {
+
     RCLCPP_INFO(this->get_logger(), "Executing goal");
     rclcpp::Rate loop_rate(20);
     const auto goal = goal_handle->get_goal();
