@@ -65,7 +65,7 @@ class AxidrawSerial(Node):
         self.path_sub = self.create_subscription(Points, 'axidraw_path', self.stroke_callback, qos_profile=QoSProfile(depth=1))
 
     def get_status(self, request, response):
-        response.status = status.get(request.resource, "Resource '{}' not found.".format(request.resource))
+        response.status = self.status.get(request.resource, "Resource '{}' not found.".format(request.resource))
         return response
 
     def set_busy(self):
