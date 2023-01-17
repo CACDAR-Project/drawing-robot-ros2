@@ -68,6 +68,12 @@ class AxidrawSerial(Node):
         response.status = self.status.get(request.resource, "Resource '{}' not found.".format(request.resource))
         return response
 
+    def go_home(self):
+        self.status["motion"] = "busy"
+        if self.status["serial"] == "ready":
+            self.ad.moveto(0,0)
+        self.status["motion"] = "ready"
+
     def set_busy(self):
         self.status["motion"] = "busy"
 
@@ -114,7 +120,7 @@ def main(args=None):
     axidraw_serial = AxidrawSerial()
 
     rclpy.spin(axidraw_serial)
-
+    axidraw_serial.go_home()
     rclpy.shutdown()
 
 
