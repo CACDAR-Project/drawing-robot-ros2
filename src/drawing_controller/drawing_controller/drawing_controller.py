@@ -58,7 +58,7 @@ class DrawingController(Node):
     def __init__(self, svgpath):
         super().__init__('drawing_controller')
         #self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
-        timer_period = 20.0  # seconds
+        timer_period = 5.0  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
@@ -66,7 +66,8 @@ class DrawingController(Node):
 
         xml = ET.parse(svgpath)
         svg = xml.getroot()
-        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.1, 0.5, -0.2, 0.2)
+        #self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.1, 0.5, -0.2, 0.2)
+        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.0, 1.0, 0.0, 1.0)
         self.lines = []
         for child in svg:
             if (child.tag == 'line'):
