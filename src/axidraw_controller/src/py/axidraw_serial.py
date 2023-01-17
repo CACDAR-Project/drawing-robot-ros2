@@ -124,10 +124,11 @@ def main(args=None):
     rclpy.init(args=args)
 
     axidraw_serial = AxidrawSerial()
-
-    rclpy.on_shutdown(axidraw_serial.go_home())
-    rclpy.spin(axidraw_serial)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(axidraw_serial)
+    finally:
+        axidraw_serial.go_home()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
