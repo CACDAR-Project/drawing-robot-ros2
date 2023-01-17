@@ -69,6 +69,7 @@ class AxidrawSerial(Node):
         return response
 
     def go_home(self):
+        self.wait_ready()
         self.status["motion"] = "busy"
         if self.status["serial"] == "ready":
             self.ad.moveto(0,0)
@@ -79,6 +80,11 @@ class AxidrawSerial(Node):
 
     def set_ready(self):
         self.status["motion"] = "ready"
+
+    def wait_ready(self):
+        rate = node.create_rate(2) #2Hz
+        while self.status["motion"] != "ready":
+            rate.sleep()
 
     def move_callback(self, msg):
         self.set_busy()
@@ -119,8 +125,8 @@ def main(args=None):
 
     axidraw_serial = AxidrawSerial()
 
+    rclpy.on_shutdown(axidraw_serial.go_home())
     rclpy.spin(axidraw_serial)
-    axidraw_serial.go_home()
     rclpy.shutdown()
 
 
