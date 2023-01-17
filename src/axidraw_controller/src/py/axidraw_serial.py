@@ -69,10 +69,10 @@ class AxidrawSerial(Node):
         return response
 
     def set_busy(self):
-        self["motion"] = "busy"
+        self.status["motion"] = "busy"
 
     def set_ready(self):
-        self["motion"] = "ready"
+        self.status["motion"] = "ready"
 
     def move_callback(self, msg):
         self.set_busy()
