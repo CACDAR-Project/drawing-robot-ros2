@@ -57,8 +57,9 @@ class AxidrawController : public RobotController
     auto result = status_client->async_send_request(request);
 
     result.wait();
-    RCLCPP_INFO(this->get_logger(), "Called is_ready(), status: %s", result.get()->status.c_str());
-    return result.get()->status == "waiting";
+    std::string res_string = result.get()->status;
+    RCLCPP_INFO(this->get_logger(), "Called is_ready(), status: %s", res_string.c_str());
+    return res_string == "waiting";
   }
 
   // Set limits for A4 paper: 297x210mm
