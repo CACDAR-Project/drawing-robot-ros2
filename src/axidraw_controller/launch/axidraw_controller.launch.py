@@ -16,7 +16,7 @@ from launch.events import Shutdown
 
 def launch_setup(context, *args, **kwargs):
     serial_port = LaunchConfiguration('serial_port', default='/dev/ttyACM0')
-    log_level = LaunchConfiguration("log_level", default='warn')
+    log_level = LaunchConfiguration("log_level", default='info')
 
     nodes = [
         Node(
