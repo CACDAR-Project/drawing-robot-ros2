@@ -31,15 +31,16 @@ class AxidrawController : public RobotController
   {
     status_client = this->create_client<robot_interfaces::srv::Status>("axidraw_status");
 
-    while (!status_client->wait_for_service(1s))
+    while (!status_client->wait_for_service(5s))
     {
       if (!rclcpp::ok())
       {
         RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for axidraw_status");
         //return 0;
       }
-      RCLCPP_ERROR(this->get_logger(), "Failed to connect to axidraw_status");
+      RCLCPP_WARN(this->get_logger(), "Failed to connect to axidraw_status, retrying");
     }
+    RCLCPP_INFO(this->get_logger(), "Successfully connected to axidraw_status, Axidraw is ready");
 
     // Create publishers for axidraw_serial.py topics
     move_pub = this->create_publisher<geometry_msgs::msg::Point>("axidraw_move", 10);
@@ -56,6 +57,7 @@ class AxidrawController : public RobotController
     auto result = status_client->async_send_request(request);
 
     result.wait();
+    RCLCPP_INFO(this->get_logger(), "Called is_ready(), status: %s", result.get()->status.c_str());
     return result.get()->status == "waiting";
   }
 
@@ -130,7 +132,11 @@ class AxidrawController : public RobotController
 
       // Ensure axidraw is not busy
       while (!is_ready())
+      {
+        feedback->status = std::to_string(i+1) + "/" + std::to_string(points.size()) + " waiting for previous motion";
+        goal_handle->publish_feedback(feedback);
         loop_rate.sleep();
+      }
 
       if (p.z > 0)
         this->penup_pub->publish(std_msgs::msg::Empty());
@@ -139,7 +145,11 @@ class AxidrawController : public RobotController
 
       // Wait for pen movement to complete
       while (!is_ready())
+      {
+        feedback->status = std::to_string(i+1) + "/" + std::to_string(points.size()) + " waiting for current motion";
+        goal_handle->publish_feedback(feedback);
         loop_rate.sleep();
+      }
 
       this->move_pub->publish(p);
 
