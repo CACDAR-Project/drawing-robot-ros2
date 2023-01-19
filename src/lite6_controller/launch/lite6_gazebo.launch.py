@@ -299,21 +299,21 @@ def launch_setup(context, *args, **kwargs):
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
-    if add_gripper.perform(context) in ('True', 'true'):
-        gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
-        gripper_ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), 'ompl_planning.yaml')
-        gripper_joint_limits_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), 'joint_limits.yaml')
+    #if add_gripper.perform(context) in ('True', 'true'):
+    #    gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
+    #    gripper_ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), 'ompl_planning.yaml')
+    #    gripper_joint_limits_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), 'joint_limits.yaml')
 
-        if gripper_controllers_yaml and 'controller_names' in gripper_controllers_yaml:
-            for name in gripper_controllers_yaml['controller_names']:
-                if name in gripper_controllers_yaml:
-                    if name not in controllers_yaml['controller_names']:
-                        controllers_yaml['controller_names'].append(name)
-                    controllers_yaml[name] = gripper_controllers_yaml[name]
-        if gripper_ompl_planning_yaml:
-            ompl_planning_yaml.update(gripper_ompl_planning_yaml)
-        if joint_limits_yaml and gripper_joint_limits_yaml:
-            joint_limits_yaml['joint_limits'].update(gripper_joint_limits_yaml['joint_limits'])
+    #    if gripper_controllers_yaml and 'controller_names' in gripper_controllers_yaml:
+    #        for name in gripper_controllers_yaml['controller_names']:
+    #            if name in gripper_controllers_yaml:
+    #                if name not in controllers_yaml['controller_names']:
+    #                    controllers_yaml['controller_names'].append(name)
+    #                controllers_yaml[name] = gripper_controllers_yaml[name]
+    #    if gripper_ompl_planning_yaml:
+    #        ompl_planning_yaml.update(gripper_ompl_planning_yaml)
+    #    if joint_limits_yaml and gripper_joint_limits_yaml:
+    #        joint_limits_yaml['joint_limits'].update(gripper_joint_limits_yaml['joint_limits'])
 
     add_prefix_to_moveit_params = getattr(mod, 'add_prefix_to_moveit_params')
     add_prefix_to_moveit_params(
@@ -325,22 +325,22 @@ def launch_setup(context, *args, **kwargs):
 
     # Planning pipeline
     # https://github.com/AndrejOrsula/panda_moveit2_config/blob/master/launch/move_group_fake_control.launch.py
-    planning_pipeline = {
-        "planning_pipelines": ["ompl", "pilz_industrial_motion_planner"],
-        "default_planning_pipeline": "pilz_industrial_motion_planner",
-        "ompl": {
-            "planning_plugin": "ompl_interface/OMPLPlanner",
-            # TODO: Re-enable `default_planner_request_adapters/AddRuckigTrajectorySmoothing` once its issues are resolved
-            "request_adapters": "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/ResolveConstraintFrames default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints",
-            # TODO: Reduce start_state_max_bounds_error once spawning with specific joint configuration is enabled
-            "start_state_max_bounds_error": 0.31416,
-        },
-        "pilz_industrial_motion_planner": {
-            "planning_plugin": "pilz_industrial_motion_planner::CommandPlanner",
-            "default_planner_config": "PTP",
-            "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService",
-        },
-    }
+    #planning_pipeline = {
+    #    "planning_pipelines": ["ompl", "pilz_industrial_motion_planner"],
+    #    "default_planning_pipeline": "pilz_industrial_motion_planner",
+    #    "ompl": {
+    #        "planning_plugin": "ompl_interface/OMPLPlanner",
+    #        # TODO: Re-enable `default_planner_request_adapters/AddRuckigTrajectorySmoothing` once its issues are resolved
+    #        "request_adapters": "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/ResolveConstraintFrames default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints",
+    #        # TODO: Reduce start_state_max_bounds_error once spawning with specific joint configuration is enabled
+    #        "start_state_max_bounds_error": 0.31416,
+    #    },
+    #    "pilz_industrial_motion_planner": {
+    #        "planning_plugin": "pilz_industrial_motion_planner::CommandPlanner",
+    #        "default_planner_config": "PTP",
+    #        "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService",
+    #    },
+    #}
     # Kinematics
     #kinematics = load_yaml('panda_moveit2_config', 'config/kinematics.yaml')
 
@@ -349,14 +349,14 @@ def launch_setup(context, *args, **kwargs):
 
 
     # Planning Configuration
-    ompl_planning_pipeline_config = {
-        'move_group': {
-            'planning_plugin': 'ompl_interface/OMPLPlanner',
-            'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-            'start_state_max_bounds_error': 0.1,
-        }
-    }
-    ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+    #ompl_planning_pipeline_config = {
+    #    'move_group': {
+    #        'planning_plugin': 'ompl_interface/OMPLPlanner',
+    #        'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+    #        'start_state_max_bounds_error': 0.1,
+    #    }
+    #}
+    #ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
     pilz_planning_pipeline_config = {
         'move_group': {
@@ -431,7 +431,8 @@ def launch_setup(context, *args, **kwargs):
         arguments=['-d', rviz_config_file],
         parameters=[
             robot_description_parameters,
-            ompl_planning_pipeline_config,
+            #ompl_planning_pipeline_config,
+            pilz_planning_pipeline_config,
             {'use_sim_time': use_sim_time},
         ],
         remappings=[
