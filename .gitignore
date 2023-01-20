@@ -5,3 +5,11 @@
 
 # Python
 **/__pycache__
+
+# Sphinx
+**/_build
+
+# Doxygen
+**/html
+**/latex
+**/xml
