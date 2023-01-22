@@ -19,7 +19,11 @@ extensions = [ 'breathe' ]
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-breathe_projects = {"robot_controller": "src/robot_controller/xml"}
+breathe_projects = {
+    "robot_controller": "src/robot_controller/xml",
+    "lite6_controller": "src/lite6_controller/xml",
+    "axidraw_controller": "src/axidraw_controller/xml",
+}
 
 
 # -- Options for HTML output -------------------------------------------------
