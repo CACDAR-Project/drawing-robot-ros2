@@ -9,13 +9,17 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 
-// A controller for a Dummy robot. Only logs messages and serves as an example for real implementation.
+/**
+ * A controller for a Dummy robot. Only logs messages and serves as an example for real implementation.
+ */
 class DummyController : public RobotController
 {
   public:
   DummyController(const rclcpp::NodeOptions & options = rclcpp::NodeOptions()) : RobotController(options) {}
 
-  /// Callback that executes path on robot
+  /**
+   * Callback that executes path on robot
+   */
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
   {
     RCLCPP_INFO(this->get_logger(), "Executing goal");
@@ -58,6 +62,9 @@ class DummyController : public RobotController
   }
 };
 
+/**
+ *
+ */
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);

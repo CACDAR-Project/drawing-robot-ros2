@@ -10,32 +10,49 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
-
-#TODO delete this
-class Test():
-    def __init__():
-        ad = axidraw.AxiDraw()          # Initialize class
-        ad.interactive()                # Enter interactive context
-        ad.options.port = "/dev/ttyACM0"
-        if not ad.connect():            # Open serial port to AxiDraw;
-            quit()                      #   Exit, if no connection.
-        ad.options.units = 2            # set working units to mm.
-        ad.options.model = 2            # set model to AxiDraw V3/A3
-        # Absolute moves follow:
-        ad.moveto(10, 10)               # Pen-up move to (10mm, 10mm)
-        ad.lineto(20, 10)               # Pen-down move, to (20mm, 10)
-        ad.moveto(0, 0)                 # Pen-up move, back to origin.
-        ad.disconnect()                 # Close serial port to AxiDraw
-
-
 #TODO handle serial disconnect
+
 class AxidrawSerial(Node):
+    """
+    Class for forwarding axidraw python API functions to ROS2 topics.
+
+    ...
+
+    Attributes
+    ----------
+    status : dict
+        contains the robot's status
+
+    Methods
+    -------
+    init_serial(port)
+
+    Services
+    -------
+    Status, 'axidraw_status'
+
+    Topics
+    -------
+    Point, 'axidraw_move'
+    Empty, 'axidraw_penup'
+    Empty, 'axidraw_pendown'
+    Points, 'axidraw_path'
+    """
+
     status = {
         "serial": "not ready",
         "motion": "waiting",
     }
 
     def init_serial(self, port):
+        '''
+        Initiates connection to axidraw over serial.
+
+            Parameters:
+                    port (string): The serial port or path to serial device (example: "/dev/ttyACM0")
+            Returns:
+                    False if connection failed and True if it succeeded.
+        '''
         self.ad = axidraw.AxiDraw()          # Initialize class
         self.ad.interactive()                # Enter interactive context
         self.ad.options.port = port
@@ -49,6 +66,15 @@ class AxidrawSerial(Node):
         return True
 
     def __init__(self):
+        """
+        Sets up a connection to the axidraw robot and starts the 'axidraw_***' services and topic subscriptions.
+        Retries connection to axidraw if it fails.
+        Fetches port from ROS2 parameter 'serial_port', defaulting to '/dev/ttyACM0'.
+
+        Parameters
+        ----------
+        """
+
         super().__init__('axidraw_serial')
 
         self.declare_parameter('serial_port', '/dev/ttyACM0')
@@ -65,28 +91,63 @@ class AxidrawSerial(Node):
         self.path_sub = self.create_subscription(Points, 'axidraw_path', self.stroke_callback, qos_profile=QoSProfile(depth=1))
 
     def get_status(self, request, response):
+        '''
+        Looks up the status of the requested resource, sets it as the response status and returns it.
+        Used directly by the "axidraw_status" service.
+
+            Parameters:
+                    request (robot_interfaces.srv.Status.request): The request
+                    response (robot_interfaces.srv.Status.response): The response
+            Returns:
+                    response (robot_interfaces.srv.Status.response): The response with the data added. If not found returns "Resource 'X' not found.".
+        '''
         response.status = self.status.get(request.resource, "Resource '{}' not found.".format(request.resource))
         return response
 
     def go_home(self):
+        '''
+        Moves the robot to (0,0).
+            Parameters:
+            Returns:
+        '''
         self.status["motion"] = "busy"
         if self.status["serial"] == "ready":
             self.ad.moveto(0,0)
         self.status["motion"] = "ready"
 
     def set_busy(self):
+        '''
+        Sets the robot motion to "busy"
+            Parameters:
+            Returns:
+        '''
         self.status["motion"] = "busy"
 
     def set_ready(self):
+        '''
+        Sets the robot motion to "ready"
+            Parameters:
+            Returns:
+        '''
         self.status["motion"] = "ready"
 
     def wait_ready(self):
+        '''
+        Sets the robot motion to "ready"
+            Parameters:
+            Returns:
+        '''
         rate = self.create_rate(2) #2Hz
         while self.status["motion"] != "ready":
             rate.sleep()
             pass
 
     def move_callback(self, msg):
+        '''
+        Callback for axidraw_move topic
+            Parameters:
+            Returns:
+        '''
         self.set_busy()
 
         self.get_logger().info("Received move: {}".format(msg))
@@ -95,6 +156,11 @@ class AxidrawSerial(Node):
         self.set_ready()
 
     def penup_callback(self, msg):
+        '''
+        Callback for axidraw_penup topic
+            Parameters:
+            Returns:
+        '''
         self.set_busy()
 
         self.get_logger().info("Received penup: {}".format(msg))
@@ -103,6 +169,11 @@ class AxidrawSerial(Node):
         self.set_ready()
 
     def pendown_callback(self, msg):
+        '''
+        Callback for axidraw_pendown topic
+            Parameters:
+            Returns:
+        '''
         self.set_busy()
 
         self.get_logger().info("Received pendown: {}".format(msg))
@@ -111,6 +182,11 @@ class AxidrawSerial(Node):
         self.set_ready()
 
     def stroke_callback(self, msg):
+        '''
+        Callback for axidraw_stroke topic
+            Parameters:
+            Returns:
+        '''
         self.set_busy()
 
         self.get_logger().info("Received path: {}".format(msg))

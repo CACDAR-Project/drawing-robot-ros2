@@ -17,7 +17,10 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
 using namespace std::chrono_literals;
-// Controller for the axidraw robot. Calls axidraw python API over ROS2 topics
+
+/**
+ * Controller for the axidraw robot. Calls axidraw python API over ROS2 topics
+ */
 class AxidrawController : public RobotController
 {
   rclcpp::Client<robot_interfaces::srv::Status>::SharedPtr status_client;
@@ -49,7 +52,9 @@ class AxidrawController : public RobotController
     path_pub = this->create_publisher<robot_interfaces::msg::Points>("axidraw_path", 10);
   }
 
-  // Return true if axidraw is ready
+  /**
+   * Return true if axidraw is ready
+   */
   bool is_ready()
   {
     auto request = std::make_shared<robot_interfaces::srv::Status::Request>();
@@ -66,6 +71,9 @@ class AxidrawController : public RobotController
   float xlim = 297;
   float ylim = 210;
 
+  /**
+   * Function that translates an input value with a given range to a value within another range.
+   */
   float translate(float val, float lmin, float lmax, float rmin, float rmax)
   {
     float lspan = lmax - lmin;
@@ -74,7 +82,9 @@ class AxidrawController : public RobotController
     return rmin + (val * rspan);
   }
 
-  // Translate a pose to axidraw coordinates (mm)
+  /**
+   * Translate a pose to axidraw coordinates (mm)
+   */
   geometry_msgs::msg::Point translate_pose(geometry_msgs::msg::PoseStamped ps)
   {
     auto pose = ps.pose;
@@ -99,7 +109,9 @@ class AxidrawController : public RobotController
   }
 
 
-  /// Callback that executes path on robot
+  /**
+   * Callback that executes path on robot
+   */
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
   {
     RCLCPP_INFO(this->get_logger(), "Executing goal");
@@ -172,6 +184,9 @@ class AxidrawController : public RobotController
   }
 };
 
+/**
+ *
+ */
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);

@@ -6,6 +6,9 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 
+/**
+ * Class which creates the ExecuteMotion action which the drawing_controller uses to talk to the robots.
+ */
 class RobotController : public rclcpp::Node
 {
 public:
@@ -26,13 +29,15 @@ private:
 
   virtual void motion_handle_accepted(const std::shared_ptr<GoalHandleExecuteMotion> goal_handle);
 
-  /// Callback that executes path on robot
   virtual void executePath(const std::shared_ptr<GoalHandleExecuteMotion> goal_handle);
 };
 
 using ExecuteMotion = robot_interfaces::action::ExecuteMotion;
 using GoalHandleExecuteMotion = rclcpp_action::ServerGoalHandle<ExecuteMotion>;
 
+/**
+ *
+ */
 RobotController::RobotController(const rclcpp::NodeOptions & options)
 : Node("robot_controller",options)
 {
@@ -46,6 +51,9 @@ RobotController::RobotController(const rclcpp::NodeOptions & options)
     std::bind(&RobotController::motion_handle_accepted, this, _1));
 }
 
+/**
+ *
+ */
 rclcpp_action::GoalResponse RobotController::motion_handle_goal(
   const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const ExecuteMotion::Goal> goal)
@@ -55,6 +63,9 @@ rclcpp_action::GoalResponse RobotController::motion_handle_goal(
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
+/**
+ *
+ */
 rclcpp_action::CancelResponse RobotController::motion_handle_cancel(
   const std::shared_ptr<GoalHandleExecuteMotion> goal_handle)
 {
@@ -63,6 +74,9 @@ rclcpp_action::CancelResponse RobotController::motion_handle_cancel(
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
+/**
+ *
+ */
 void RobotController::motion_handle_accepted(const std::shared_ptr<GoalHandleExecuteMotion> goal_handle)
 {
   using namespace std::placeholders;
@@ -70,7 +84,9 @@ void RobotController::motion_handle_accepted(const std::shared_ptr<GoalHandleExe
   std::thread{std::bind(&RobotController::executePath, this, _1), goal_handle}.detach();
 }
 
-/// Callback that executes path on robot
+/**
+ * Callback that executes path on robot
+ */
 void RobotController::executePath(const std::shared_ptr<GoalHandleExecuteMotion> goal_handle)
 {
   const auto goal = goal_handle->get_goal();

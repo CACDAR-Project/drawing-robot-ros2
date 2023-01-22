@@ -29,10 +29,17 @@ const std::string MOVE_GROUP = "lite6";
 // https://moveit.picknik.ai/humble/doc/examples/motion_planning_api/motion_planning_api_tutorial.html
 // https://github.com/ros-planning/moveit2/blob/main/moveit_planners/pilz_industrial_motion_planner/src/move_group_sequence_service.cpp
 //
+//
+
+/**
+ * Controller for xArm Lite6, implementing RobotController
+ */
 class Lite6Controller : public RobotController
 {
 public:
-  /// Move group interface for the robot
+  /**
+   * Move group interface for the robot
+   */
   moveit::planning_interface::MoveGroupInterface move_group;
 
   //bool moved = false;
@@ -40,9 +47,16 @@ public:
   // TODO get pilz working
   //std::unique_ptr<pilz_industrial_motion_planner::CommandListManager> command_list_manager_;
   // command_list_manager_ = std::make_unique<pilz_industrial_motion_planner::CommandListManager>(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
+
+  /**
+   * CommandListManager, used to plan MotionSequenceRequest
+   */
   pilz_industrial_motion_planner::CommandListManager command_list_manager;
   //pilz_industrial_motion_planner::CommandListManager command_list_manager(*std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
 
+  /**
+   * Constructor
+   */
   Lite6Controller(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
     : RobotController(options),
       move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP),
@@ -63,6 +77,9 @@ public:
 
   }
 
+  /**
+   * This function takes a pose and returns a MotionPlanRequest
+   */
   planning_interface::MotionPlanRequest createRequest(geometry_msgs::msg::PoseStamped pose)
   {
     planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
@@ -97,7 +114,9 @@ public:
   // https://answers.ros.org/question/330632/moveit-motion-planning-how-should-i-splice-several-planned-motion-trajectories/
   // https://groups.google.com/g/moveit-users/c/lZL2HTjLu-k
 
-  /// Callback that executes path on robot
+  /**
+   * Callback that executes path on robot
+   */
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
   {
 
@@ -152,6 +171,9 @@ public:
   }
 };
 
+/**
+ * Starts lite6_controller
+ */
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
