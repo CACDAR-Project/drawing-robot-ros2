@@ -37,6 +37,7 @@ endif()
 add_executable(lite6_controller src/lite6_controller.cpp)
 ament_target_dependencies(lite6_controller
   "rclcpp"
+  "moveit"
   "rclcpp_action"
   "Eigen3"
   "pilz_industrial_motion_planner"

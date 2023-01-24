@@ -1,28 +1,44 @@
 #include <cstdio>
 #include <rclcpp/rclcpp.hpp>
 #include <robot_controller/robot_controller.hpp>
+#include <chrono>
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose.hpp>
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/msg/collision_object.hpp>
 
-#include <moveit/planning_interface/planning_interface.h>
-#include <moveit/planning_interface/planning_response.h>
+//#include <moveit/planning_interface/planning_interface.h>
+//#include <moveit/planning_interface/planning_response.h>
 //#include <moveit/kinematic_constraints/kinematic_constraint.h>
 #include <moveit/kinematic_constraints/utils.h>
+#include <moveit/move_group_interface/move_group_interface.h>
+
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
+
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/common_planning_interface_objects/common_objects.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+
 
 #include <moveit_msgs/msg/constraints.hpp>
 #include <moveit_msgs/msg/motion_plan_request.hpp>
 #include <moveit_msgs/msg/motion_sequence_request.hpp>
 #include <moveit_msgs/msg/motion_sequence_item.hpp>
 
+
+#include <moveit/moveit_cpp/moveit_cpp.h>
+#include <moveit/moveit_cpp/planning_component.h>
+
+#include <moveit/robot_trajectory/robot_trajectory.h>
+
 #include <pilz_industrial_motion_planner/command_list_manager.h>
 
 const std::string MOVE_GROUP = "lite6";
 
 
+using namespace std::chrono_literals;
 
 // MOTION PLANNING API
 // https://github.com/ros-planning/moveit2_tutorials/blob/humble/doc/examples/motion_planning_api/src/motion_planning_api_tutorial.cpp
@@ -30,6 +46,8 @@ const std::string MOVE_GROUP = "lite6";
 // https://github.com/ros-planning/moveit2/blob/main/moveit_planners/pilz_industrial_motion_planner/src/move_group_sequence_service.cpp
 //
 //
+// USE
+// https://industrial-training-master.readthedocs.io/en/foxy/_source/session4/ros2/0-Motion-Planning-CPP.html
 
 /**
  * Controller for xArm Lite6, implementing RobotController
@@ -41,6 +59,14 @@ public:
    * Move group interface for the robot
    */
   moveit::planning_interface::MoveGroupInterface move_group;
+
+  /**
+   * TODO Use instead of MoveGroupInterface
+   * https://industrial-training-master.readthedocs.io/en/foxy/_source/session4/ros2/0-Motion-Planning-CPP.html
+   */
+  moveit_cpp::MoveItCppPtr moveit_cpp_;
+  moveit_cpp::PlanningComponentPtr planning_component_;
+  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
 
   //bool moved = false;
   //
@@ -60,17 +86,39 @@ public:
   Lite6Controller(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
     : RobotController(options),
       move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP),
+      //moveit_cpp_(std::shared_ptr<rclcpp::Node>(std::move(this))),
+      //planning_component_(MOVE_GROUP, moveit_cpp_),
       command_list_manager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel())
   {
 
     //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
     //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
     // Use upper joint velocity and acceleration limits
-    //this->move_group.setMaxAccelerationScalingFactor(1.0);
-    //this->move_group.setMaxVelocityScalingFactor(1.0);
+    this->move_group.setMaxAccelerationScalingFactor(1.0);
+    this->move_group.setMaxVelocityScalingFactor(1.0);
 
     // Subscribe to target pose
     //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
+
+  }
+
+  void setup()
+  {
+    //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(move_group.getNodeHandle());
+    try {
+      //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(this->shared_from_this());
+      //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(move_group.getNodeHandle());
+      //planning_component_ = std::make_shared<moveit_cpp::PlanningComponent>(MOVE_GROUP, moveit_cpp_);
+      //
+
+      planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(this->shared_from_this(),
+                                                                                               "robot_description");
+    }
+    catch (int e) {
+      RCLCPP_ERROR(this->get_logger(), "Initialization Failed: %d", e);
+      return;
+    }
+
 
     move_group.setPlanningTime(30.0);
     RCLCPP_INFO(this->get_logger(), "Initialization successful.");
@@ -91,9 +139,15 @@ public:
     std::vector<double> tolerance_pose(3, 0.01);
     std::vector<double> tolerance_angle(3, 0.01);
 
+
+    // Set motion goal of end effector link
+    //std::string ee_link = moveit_cpp_->getRobotModel()->getJointModelGroup(planning_component_->getPlanningGroupName())->getLinkModelNames().back();
+    //RCLCPP_INFO(this->get_logger(), "Got ee_link");
+
     mpr.group_name = MOVE_GROUP;
     moveit_msgs::msg::Constraints pose_goal =
       kinematic_constraints::constructGoalConstraints("link_eef", pose, tolerance_pose, tolerance_angle);
+      //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
 
     mpr.goal_constraints.push_back(pose_goal);
     return mpr;
@@ -113,6 +167,69 @@ public:
   // https://discourse.ros.org/t/moveit-trajectory-through-waypoints/17439
   // https://answers.ros.org/question/330632/moveit-motion-planning-how-should-i-splice-several-planned-motion-trajectories/
   // https://groups.google.com/g/moveit-users/c/lZL2HTjLu-k
+  //
+
+  // Set limits for A4 paper
+  float xlim_lower = 0.1;
+  float xlim_upper = 0.5;
+  float ylim_lower = -0.2;
+  float ylim_upper = 0.2;
+  float zlim_lower = 0.1;
+  float zlim_upper = 0.3;
+
+  /**
+   * Function that translates an input value with a given range to a value within another range.
+   */
+  float translate(float val, float lmin, float lmax, float rmin, float rmax)
+  {
+    float lspan = lmax - lmin;
+    float rspan = rmax - rmin;
+    val = (val - lmin) / lspan;
+    return rmin + (val * rspan);
+  }
+
+  /**
+   * Translates a pose to the xArm coordinate frame
+   */
+  geometry_msgs::msg::PoseStamped translatePose(geometry_msgs::msg::PoseStamped pose)
+  {
+    // TODO support paper angle
+    pose.pose.position.x = translate(pose.pose.position.x, 0, 1, xlim_lower, xlim_upper);
+    pose.pose.position.y = translate(pose.pose.position.y, 0, 1, ylim_lower, ylim_upper);
+    pose.pose.position.z = translate(pose.pose.position.z, 0, 1, zlim_lower, zlim_upper);
+
+    return pose;
+  }
+
+  void logPose(geometry_msgs::msg::PoseStamped pose)
+  {
+    RCLCPP_INFO(this->get_logger(), "pose position.x: %f", pose.pose.position.x);
+    RCLCPP_INFO(this->get_logger(), "pose position.y: %f", pose.pose.position.y);
+    RCLCPP_INFO(this->get_logger(), "pose position.z: %f", pose.pose.position.z);
+  }
+
+  /**
+   * Creates a trajectory for a pose and appends it to a given trajectory
+   */
+  void addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
+  {
+    pose = translatePose(pose);
+    move_group.setPoseTarget(pose);
+    //moveit_msgs::msg::RobotTrajectory trajectory;
+    //move_group.setPlanningPipelineId("PTP");
+    move_group.setPlannerId("PTP");
+
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+    bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "" : "FAILED");
+
+    // Append segment to complete trajectory
+    trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
+                                        plan.trajectory_.joint_trajectory.points.begin(),
+                                        plan.trajectory_.joint_trajectory.points.end());
+
+    move_group.clearPoseTarget();
+  }
 
   /**
    * Callback that executes path on robot
@@ -126,17 +243,46 @@ public:
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();
 
-    moveit_msgs::msg::MotionSequenceRequest msr;
-    //waypoints.push_back(move_group.getCurrentPose().pose);
-    for (auto p : goal->motion.path)
-    {
-      moveit_msgs::msg::MotionSequenceItem msi;
-      msi.req = createRequest(p);
-      msi.blend_radius = 0.001; //TODO make configurable
-      msr.items.push_back(msi);
-    }
+    // getting current state of robot from environment
+    //if (!moveit_cpp_->getPlanningSceneMonitor()->requestPlanningSceneState())
+    //{
+    //  RCLCPP_ERROR(this->get_logger(), "Failed to get planning scene");
+    //  return;
+    //}
+    //moveit::core::RobotStatePtr start_robot_state = moveit_cpp_->getCurrentState(2.0);
+
+    //moveit_msgs::msg::MotionSequenceRequest msr;
+    ////waypoints.push_back(move_group.getCurrentPose().pose);
+    //for (auto p : goal->motion.path)
+    //{
+    //  RCLCPP_INFO(this->get_logger(), "Creating MSI");
+    //  moveit_msgs::msg::MotionSequenceItem msi;
+    //  msi.req = createRequest(p);
+    //  msi.blend_radius = 0.001; //TODO make configurable
+    //  msr.items.push_back(msi);
+    //}
+    //RCLCPP_INFO(this->get_logger(), "Created MSR");
 
     moveit_msgs::msg::RobotTrajectory trajectory;
+    robot_trajectory::RobotTrajectory rt(move_group.getRobotModel(), MOVE_GROUP);
+
+    move_group.setStartStateToCurrentState();
+    for (auto p : goal->motion.path)
+    {
+      //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
+
+      // Append next pose to trajectory
+      addPoseToTrajectory(p, &trajectory);
+
+      // set move_group start state to final pose of trajectory
+      rt.setRobotTrajectoryMsg(*(move_group.getCurrentState()), trajectory);
+      moveit::core::RobotState robot_state = rt.getLastWayPoint();
+      const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
+      geometry_msgs::msg::Pose pose;
+      pose = Eigen::toMsg(eef_transform);
+      //tf2::toMsg(eef_transform, pose);
+      move_group.setStartStateToCurrentState();
+    }
 
     //double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     //RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
@@ -180,6 +326,13 @@ int main(int argc, char ** argv)
 
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Starting lite6_controller");
   auto lite6 = std::make_shared<Lite6Controller>();
+
+  // TODO remove sleep if not necessary
+  // Sleep in case move_group not loaded
+  rclcpp::sleep_for(2s);
+
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Setting up lite6_controller");
+  lite6->setup();
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(lite6);

@@ -16,7 +16,7 @@ from launch.actions import OpaqueFunction
 
 def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time", default=True)
-    log_level = LaunchConfiguration("log_level", default='warn')
+    log_level = LaunchConfiguration("log_level", default='info')
     rviz_config = LaunchConfiguration('rviz_config', default=os.path.join(get_package_share_directory("draw_svg"), "rviz", "ign_moveit2_examples.rviz"))
 
     prefix = LaunchConfiguration('prefix', default='')
@@ -299,6 +299,14 @@ def launch_setup(context, *args, **kwargs):
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
+    # FIX acceleration limits
+    for i in range(1,7):
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
+
+    #print(joint_limits_yaml)
+    #quit()
+
     #if add_gripper.perform(context) in ('True', 'true'):
     #    gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
     #    gripper_ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), 'ompl_planning.yaml')
@@ -349,14 +357,14 @@ def launch_setup(context, *args, **kwargs):
 
 
     # Planning Configuration
-    #ompl_planning_pipeline_config = {
-    #    'move_group': {
-    #        'planning_plugin': 'ompl_interface/OMPLPlanner',
-    #        'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-    #        'start_state_max_bounds_error': 0.1,
-    #    }
-    #}
-    #ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+    ompl_planning_pipeline_config = {
+        'move_group': {
+            'planning_plugin': 'ompl_interface/OMPLPlanner',
+            'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            'start_state_max_bounds_error': 0.1,
+        }
+    }
+    ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
     pilz_planning_pipeline_config = {
         'move_group': {
@@ -456,7 +464,7 @@ def launch_setup(context, *args, **kwargs):
         #    target_action=rviz2_node,
         #    on_exit=[EmitEvent(event=Shutdown())]
         #)),
-        rviz2_node,
+        #rviz2_node,
         static_tf,
         move_group_node,
         robot_gazebo_launch,
