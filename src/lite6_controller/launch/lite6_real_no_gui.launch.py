@@ -155,6 +155,11 @@ def launch_setup(context, *args, **kwargs):
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
+    # FIX acceleration limits
+    for i in range(1,7):
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 0.5
+
     if add_gripper.perform(context) in ('True', 'true'):
         gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
         gripper_ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), 'ompl_planning.yaml')
@@ -186,6 +191,16 @@ def launch_setup(context, *args, **kwargs):
         }
     }
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+
+
+    pilz_planning_pipeline_config = {
+        'move_group': {
+            'planning_plugin': 'pilz_industrial_motion_planner/CommandPlanner',
+            'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            "default_planner_config": "PTP",
+            "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService",
+        }
+    }
 
     # Moveit controllers Configuration
     moveit_controllers = {
@@ -229,7 +244,8 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[
             robot_description_parameters,
-            ompl_planning_pipeline_config,
+            #ompl_planning_pipeline_config,
+            pilz_planning_pipeline_config,
             trajectory_execution,
             plan_execution,
             moveit_controllers,
