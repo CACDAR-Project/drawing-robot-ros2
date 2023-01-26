@@ -219,15 +219,27 @@ public:
     //move_group.setPlanningPipelineId("PTP");
     move_group.setPlannerId("PTP");
 
+    robot_trajectory::RobotTrajectory previous_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
+    previous_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), *trajectory);
+
+
     moveit::planning_interface::MoveGroupInterface::Plan plan;
     bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
     RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED");
 
+    robot_trajectory::RobotTrajectory next_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
+    next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
+
+    // append trajectory, with time step of 2.0, not skipping any points
+    previous_trajectory.append(next_trajectory, 2.0, 0);
+    *trajectory = moveit_msgs::msg::RobotTrajectory();
+    previous_trajectory.getRobotTrajectoryMsg(*trajectory);
+
     // Append segment to complete trajectory
-    trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
-                                        plan.trajectory_.joint_trajectory.points.begin(),
-                                        plan.trajectory_.joint_trajectory.points.end());
-    trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
+    //trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
+    //                                    plan.trajectory_.joint_trajectory.points.begin(),
+    //                                    plan.trajectory_.joint_trajectory.points.end());
+    //trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
 
     move_group.clearPoseTarget();
   }
@@ -264,8 +276,9 @@ public:
     //}
     //RCLCPP_INFO(this->get_logger(), "Created MSR");
 
-    moveit_msgs::msg::RobotTrajectory trajectory;
-    robot_trajectory::RobotTrajectory rt(move_group.getRobotModel(), MOVE_GROUP);
+    moveit_msgs::msg::RobotTrajectory multi_trajectory;
+    //robot_trajectory::RobotTrajectory rt(move_group.getRobotModel(), MOVE_GROUP);
+    robot_trajectory::RobotTrajectory single_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
 
     move_group.setStartStateToCurrentState();
     for (auto p : goal->motion.path)
@@ -273,26 +286,26 @@ public:
       //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
 
       // Append next pose to trajectory
-      addPoseToTrajectory(p, &trajectory);
+      addPoseToTrajectory(p, &multi_trajectory);
 
       // set move_group start state to final pose of trajectory
       //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");
-      //rt.setRobotTrajectoryMsg(*(move_group.getCurrentState(100)), trajectory);
+      single_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), multi_trajectory);
+      //rt.setRobotTrajectoryMsg(rt.getLastWayPoint(), trajectory);
       //RCLCPP_INFO(this->get_logger(), "getLastWayPoint");
-      //moveit::core::RobotState robot_state = rt.getLastWayPoint();
+      moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
       //RCLCPP_INFO(this->get_logger(), "eef");
       //const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
       //geometry_msgs::msg::Pose pose;
       //pose = Eigen::toMsg(eef_transform);
-      ////tf2::toMsg(eef_transform, pose);
-      //move_group.setStartStateToCurrentState();
+      move_group.setStartState(robot_state);
 
-      RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", trajectory.joint_trajectory.points.size());
 
-      // TODO remove
-      this->move_group.execute(trajectory);
-      trajectory = moveit_msgs::msg::RobotTrajectory();
+      //trajectory = moveit_msgs::msg::RobotTrajectory();
     }
+
+    RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", multi_trajectory.joint_trajectory.points.size());
+    this->move_group.execute(multi_trajectory);
 
     //double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     //RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
