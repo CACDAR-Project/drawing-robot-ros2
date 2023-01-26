@@ -302,7 +302,7 @@ def launch_setup(context, *args, **kwargs):
     # FIX acceleration limits
     for i in range(1,7):
         joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 0.5
 
     #print(joint_limits_yaml)
     #quit()
