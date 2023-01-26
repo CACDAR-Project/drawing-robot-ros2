@@ -171,11 +171,11 @@ public:
 
   // Set limits for A4 paper
   float xlim_lower = 0.1;
-  float xlim_upper = 0.5;
+  float xlim_upper = 0.3;
   float ylim_lower = -0.2;
   float ylim_upper = 0.2;
   float zlim_lower = 0.1;
-  float zlim_upper = 0.3;
+  float zlim_upper = 0.2;
 
   /**
    * Function that translates an input value with a given range to a value within another range.
@@ -221,12 +221,13 @@ public:
 
     moveit::planning_interface::MoveGroupInterface::Plan plan;
     bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
-    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "" : "FAILED");
+    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED");
 
     // Append segment to complete trajectory
     trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
                                         plan.trajectory_.joint_trajectory.points.begin(),
                                         plan.trajectory_.joint_trajectory.points.end());
+    trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
 
     move_group.clearPoseTarget();
   }
@@ -275,19 +276,27 @@ public:
       addPoseToTrajectory(p, &trajectory);
 
       // set move_group start state to final pose of trajectory
-      rt.setRobotTrajectoryMsg(*(move_group.getCurrentState()), trajectory);
-      moveit::core::RobotState robot_state = rt.getLastWayPoint();
-      const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
-      geometry_msgs::msg::Pose pose;
-      pose = Eigen::toMsg(eef_transform);
-      //tf2::toMsg(eef_transform, pose);
-      move_group.setStartStateToCurrentState();
+      //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");
+      //rt.setRobotTrajectoryMsg(*(move_group.getCurrentState(100)), trajectory);
+      //RCLCPP_INFO(this->get_logger(), "getLastWayPoint");
+      //moveit::core::RobotState robot_state = rt.getLastWayPoint();
+      //RCLCPP_INFO(this->get_logger(), "eef");
+      //const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
+      //geometry_msgs::msg::Pose pose;
+      //pose = Eigen::toMsg(eef_transform);
+      ////tf2::toMsg(eef_transform, pose);
+      //move_group.setStartStateToCurrentState();
+
+      RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", trajectory.joint_trajectory.points.size());
+
+      // TODO remove
+      this->move_group.execute(trajectory);
+      trajectory = moveit_msgs::msg::RobotTrajectory();
     }
 
     //double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     //RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
 
-    this->move_group.execute(trajectory);
 
     //waypoints.clear();
 
@@ -334,7 +343,8 @@ int main(int argc, char ** argv)
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Setting up lite6_controller");
   lite6->setup();
 
-  rclcpp::executors::SingleThreadedExecutor executor;
+  //rclcpp::executors::SingleThreadedExecutor executor;
+  rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(lite6);
   executor.spin();
 
