@@ -58,7 +58,7 @@ class DrawingController(Node):
     def __init__(self, svgpath):
         super().__init__('drawing_controller')
         #self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
-        timer_period = 5.0  # seconds
+        timer_period = 20.0  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
