@@ -58,9 +58,10 @@ class DrawingController(Node):
     def __init__(self, svgpath):
         super().__init__('drawing_controller')
         #self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
-        timer_period = 20.0  # seconds
+        timer_period = 1.0  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
+        self.busy = False
 
         self._action_client = ActionClient(self, ExecuteMotion, 'execute_motion')
 
@@ -76,6 +77,7 @@ class DrawingController(Node):
                 self.lines.append((p1,p2))
 
     def send_goal(self, motion):
+        self.busy = True
         goal_msg = ExecuteMotion.Goal()
         goal_msg.motion = motion
 
@@ -99,6 +101,7 @@ class DrawingController(Node):
     def get_result_callback(self, future):
         result = future.result().result
         self.get_logger().info('Result: {0}'.format(result))
+        self.busy = False
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
@@ -121,6 +124,8 @@ class DrawingController(Node):
         motion.path.append(ps)
 
     def timer_callback(self):
+        if self.busy:
+            return
         next_line = self.lines[self.i]
         motion = Motion()
         p1 = self.map_point(next_line[0][0],next_line[0][1])
