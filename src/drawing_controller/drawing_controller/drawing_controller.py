@@ -71,8 +71,12 @@ class DrawingController(Node):
         xml = ET.parse(svgpath)
         svg = xml.getroot()
         #self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.1, 0.5, -0.2, 0.2)
-        self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.0, 1.0, 0.0, 1.0)
-        self.lines = []
+        try:
+            self.map_point = map_point_function(float(svg.get('width')), float(svg.get('height')), 0.0, 1.0, 0.0, 1.0)
+        except:
+            self.map_point = map_point_function(1000, 1000, 0.0, 1.0, 0.0, 1.0)
+
+        self.lines = [ ((0,0),(0,0)) ]
         for child in svg:
             if (child.tag == 'line'):
                 p1 = (float(child.get('x1')), float(child.get('y1')))
@@ -80,7 +84,7 @@ class DrawingController(Node):
                 self.lines.append((p1,p2))
 
         self.svg_processor = SVGProcessor(self.get_logger())
-        self.svg_processor.process_svg(svgpath)
+        print(self.svg_processor.process_svg(svgpath))
 
     def send_goal(self, motion):
         self.busy = True
