@@ -17,6 +17,8 @@ from robot_interfaces.msg import Motion
 import sys
 from copy import deepcopy
 
+from drawing_controller.svg_processor import SVGProcessor
+
 def quaternion_from_euler(ai, aj, ak):
     ai /= 2.0
     aj /= 2.0
@@ -55,6 +57,7 @@ def map_point_function(x_pixels, y_pixels, xlim_lower, xlim_upper, ylim_lower, y
 
 
 class DrawingController(Node):
+
     def __init__(self, svgpath):
         super().__init__('drawing_controller')
         #self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
@@ -75,6 +78,9 @@ class DrawingController(Node):
                 p1 = (float(child.get('x1')), float(child.get('y1')))
                 p2 = (float(child.get('x2')), float(child.get('y2')))
                 self.lines.append((p1,p2))
+
+        self.svg_processor = SVGProcessor(self.get_logger())
+        self.svg_processor.process_svg(svgpath)
 
     def send_goal(self, motion):
         self.busy = True
