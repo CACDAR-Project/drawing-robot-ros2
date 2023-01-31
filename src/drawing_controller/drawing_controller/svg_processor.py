@@ -80,10 +80,119 @@ class SVGProcessor():
 
     # https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d
     def path_parser(self, child, map_point):
-        path = child.get('d')
-        self.logger.info("Parsing path :'{}...' with {} characters".format(path[:40], len(path)))
-        self.logger.error("Path parser not implemented")
-        return []
+        '''
+
+        MoveTo: M, m
+        LineTo: L, l, H, h, V, v
+        Cubic Bézier Curve: C, c, S, s
+        Quadratic Bézier Curve: Q, q, T, t
+        Elliptical Arc Curve: A, a
+        ClosePath: Z, z
+
+            Parameters:
+                    primitive (lxml child): the primitive from the svg file
+            Returns:
+                    primitive_fn ():
+        '''
+        pathstr = child.get('d')
+
+        # Tokenizer
+        self.logger.info("Tokenizing path :'{}...' with {} characters".format(pathstr[:40], len(pathstr)))
+        path = []
+        i = 0
+        while i < len(pathstr):
+            c = pathstr[i]
+            if c.isalpha():
+                path.append(c)
+            if c == '-' or c.isdecimal():
+                s = ""
+                while i < len(pathstr) and not c.isspace():
+                    s = s + c
+                    i += 1
+                    c = pathstr[i]
+                path.append(s)
+            i += 1
+
+        # Parser
+        self.logger.info("Parsing path :'{}...' with {} tokens".format(path[:20], len(path)))
+        x = 0.0
+        y = 0.0
+        i = 0
+        output = []
+        def getnum():
+            nonlocal i
+            i += 1
+            return float(path[i])
+        def setpointup():
+            nonlocal output
+            p = map_point(x,y)
+            output.append((p[0],p[1],1.0))
+        def setpointdown():
+            nonlocal output
+            p = map_point(x,y)
+            output.append((p[0],p[1],0.0))
+        while i < len(path):
+            w = path[i]
+            # MoveTo commands
+            if (w == "M"):
+                setpointup()
+                x = getnum()
+                y = getnum()
+                setpointup()
+                i += 1
+                continue
+            if (w == "m"):
+                setpointup()
+                x += getnum()
+                y += getnum()
+                setpointup()
+                i += 1
+                continue
+            # LineTo commands
+            if (w == "L"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "l"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "H"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "h"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "V"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "v"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            # Cubic Bézier Curve commands
+            if (w == "C"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "c"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "S"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "s"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            # Quadratic Bézier Curve commands
+            if (w == "Q"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "q"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "T"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "t"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            # Elliptical arc commands
+            if (w == "A"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "a"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            # ClosePath commands
+            if (w == "Z"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "z"):
+                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            self.logger.error("SVG path parser panic mode at '{}'".format(path[i]))
+            i += 1
+
+        return output
 
     # https://stackoverflow.com/questions/30232031/how-can-i-strip-namespaces-out-of-an-lxml-tree
     def strip_ns_prefix(self, tree):
