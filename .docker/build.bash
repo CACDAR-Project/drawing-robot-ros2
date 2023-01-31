@@ -3,7 +3,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
 PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
-TAG="cacdar/$(basename "${PROJECT_DIR}")"
+TAG="cacdar/drawing-robot-ros2"
 
 if [ "${#}" -gt "0" ]; then
     if [[ "${1}" != "-"* ]]; then
