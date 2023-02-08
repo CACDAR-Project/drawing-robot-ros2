@@ -170,12 +170,12 @@ public:
   //
 
   // Set limits for A4 paper
-  float xlim_lower = 0.15;
-  float xlim_upper = 0.3;
-  float ylim_lower = -0.075;
-  float ylim_upper = 0.075;
+  float xlim_lower = 0.12;
+  float xlim_upper = 0.2;
+  float ylim_lower = -0.2;
+  float ylim_upper = 0.2;
   float zlim_lower = 0.1;
-  float zlim_upper = 0.15;
+  float zlim_upper = 0.2;
 
   /**
    * Function that translates an input value with a given range to a value within another range.
