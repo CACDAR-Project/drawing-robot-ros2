@@ -1,6 +1,31 @@
 # drawing-robot-ros2
 
-## Building
+This repository contains ROS2 packages which make up a system used for drawing SVG images on different robots.
+These packages are in 'src/'.
+
+Documentation and build scripts for the entire project are at the top level.
+
+The simplest way to run the project currently is by building and running the docker container.
+
+## Docker
+### Build container
+
+``` sh
+bash .docker/build.bash
+```
+
+### Run built container
+``` sh
+bash .docker/run.bash
+```
+
+If active changes are being made, run:
+``` sh
+bash .docker/devel.bash
+```
+This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
+
+## Building locally
 
 Requirements:
 - python3-pip 
@@ -17,6 +42,7 @@ source src/install/local_setup.bash
 ```
 
 ## Running
+
 Run
 ``` sh
 ros2 run robot_controller dummy_controller
@@ -40,25 +66,11 @@ ros2 launch lite6_controller lite6_real_no_gui.launch.py
 
 And simultaneously (using tmux or another terminal) run
 ``` sh
-ros2 run drawing_controller drawing_controller src/draw_svg/svg/test.svg
+ros2 run drawing_controller drawing_controller svg/test.svg
 ```
-## Docker
-### Build container
+## Creating compatible SVG images
+https://github.com/visioncortex/vtracer
 
-``` sh
-bash .docker/build.bash
-```
-
-### Run built container
-``` sh
-bash .docker/run.bash
-```
-
-If active changes are being made, run:
-``` sh
-bash .docker/devel.bash
-```
-This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
 ## ROS2 rpi4
 https://github.com/ros-realtime/ros-realtime-rpi4-image/releases
 
