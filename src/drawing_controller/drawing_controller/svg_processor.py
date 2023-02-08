@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import lxml.etree as ET
+import splipy.curve_factory as cf
+import numpy as np
 
 class SVGProcessor():
     """
@@ -33,6 +35,8 @@ class SVGProcessor():
             "polyline": self.primitive_polyline,
             "polygon": self.primitive_polygon,
         }
+        self.map_point = self.map_point_function(1000,
+                                                1000)
 
     def get_primitive_fn(self, primitive):
         '''
@@ -55,31 +59,29 @@ class SVGProcessor():
 
         return [down] + points + [up]
 
-    def primitive_line(self, child, map_point):
-        p1 = map_point(float(child.get('x1')), float(child.get('y1')))
-        p2 = map_point(float(child.get('x2')), float(child.get('y2')))
+    def primitive_line(self, child):
+        p1 = self.map_point(float(child.get('x1')), float(child.get('y1')))
+        p2 = self.map_point(float(child.get('x2')), float(child.get('y2')))
         return [
             (p1[0],p1[1],0),
             (p2[0],p2[1],0),
             ]
 
-    def primitive_polyline(self, child, map_point):
+    def primitive_polyline(self, child):
         points = child.get('points').split(' ')
-        points = [(map_point(float(p[0])),
-                   map_point(float(p[1])))
-                  for p in points.split(',')]
+        points = [(self.map_point(float(p[0]),float(p[1]))) for p in points.split(',')]
         output = []
         for p in points:
             output.append((p[0],p[1],0))
         return output
 
-    def primitive_polygon(self, child, map_point):
-        output = self.primitive_polyline(child, map_point)
+    def primitive_polygon(self, child):
+        output = self.primitive_polyline(child)
         output.append((output[0][0],output[0][1],0))
         return output
 
     # https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d
-    def path_parser(self, child, map_point):
+    def path_parser(self, child):
         '''
 
         MoveTo: M, m
@@ -102,8 +104,11 @@ class SVGProcessor():
         i = 0
         while i < len(pathstr):
             c = pathstr[i]
+            # Single letter commands
             if c.isalpha():
                 path.append(c)
+
+            # Numbers
             if c == '-' or c.isdecimal():
                 s = ""
                 while i < len(pathstr) and not c.isspace():
@@ -123,14 +128,22 @@ class SVGProcessor():
             nonlocal i
             i += 1
             return float(path[i])
+        def nextisnum():
+            return path[i+1].isdecimal()
         def setpointup():
             nonlocal output
-            p = map_point(x,y)
+            p = self.map_point(x,y)
             output.append((p[0],p[1],1.0))
         def setpointdown():
             nonlocal output
-            p = map_point(x,y)
+            p = self.map_point(x,y)
             output.append((p[0],p[1],0.0))
+        def appendpoints(points):
+            nonlocal output
+            for x,y in points:
+                p = self.map_point(x,y)
+                output.append((p[0],p[1],0.0))
+
         while i < len(path):
             w = path[i]
             # MoveTo commands
@@ -163,7 +176,25 @@ class SVGProcessor():
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             # Cubic Bézier Curve commands
             if (w == "C"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                self.logger.info("SVG path parser cubic bezier curve at i={}".format(i))
+                while True:
+                    # https://github.com/sintef/Splipy/tree/master/examples
+                    control_points = [(x,y),
+                                      (getnum(),getnum()),
+                                      (getnum(),getnum()),
+                                      (getnum(),getnum())]
+                    x = control_points[-1][0]
+                    y = control_points[-1][1]
+                    control_points = np.array(control_points)
+                    n = 10
+                    curve = cf.cubic_curve(control_points)
+                    lin = np.linspace(curve.start(0), curve.end(0), n)
+                    coordinates = curve(lin)                                 # physical (x,y)-coordinates, size (n,2)
+                    appendpoints(coordinates)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "c"):
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             if (w == "S"):
@@ -189,9 +220,10 @@ class SVGProcessor():
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             if (w == "z"):
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
-            self.logger.error("SVG path parser panic mode at '{}'".format(path[i]))
-            i += 1
+            self.logger.error("SVG path parser panic mode at '{}'".format(w))
 
+            i += 1
+        self.logger.info("Finished parsing path")
         return output
 
     # https://stackoverflow.com/questions/30232031/how-can-i-strip-namespaces-out-of-an-lxml-tree
@@ -210,11 +242,9 @@ class SVGProcessor():
             svg = xml.getroot()
             svg = self.strip_ns_prefix(svg)
 
-            map_point = self.map_point_function(1000,
-                                                1000)
             if 'width' in svg.attrib:
-                map_point = self.map_point_function(float(svg.get('width')),
-                                                    float(svg.get('height')))
+                self.map_point = self.map_point_function(float(svg.get('width')),
+                                                         float(svg.get('height')))
             elif 'viewBox' in svg.attrib:
                 # TODO parse viewBox
                 pass
@@ -227,11 +257,11 @@ class SVGProcessor():
                primitive_fn = self.primitive_line
                # path can consist of multiple primitives
                if (child.tag == 'path'):
-                   for m in self.path_parser(child, map_point):
+                   for m in self.path_parser(child):
                        motions.append(m)
                else:
                    primitive_fn = self.get_primitive_fn(child)
-                   motions.append(primitive_fn(child, map_point))
+                   motions.append(primitive_fn(child))
 
             motions_refined = []
             for m in motions:

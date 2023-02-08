@@ -34,6 +34,11 @@ RUN apt-get update && \
     pip install --upgrade --upgrade-strategy eager packaging && \
     pip install https://cdn.evilmadscientist.com/dl/ad/public/AxiDraw_API.zip --upgrade --upgrade-strategy eager
 
+### Install splipy
+RUN apt-get update && \
+    apt-get install -yq python3-pip && \
+    pip install --upgrade --upgrade-strategy eager splipy
+
 ### Import and install dependencies, then build these dependencies (not ign_moveit2_examples yet)
 COPY ./drawing_robot_ros2.repos ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos
 RUN vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos && \
