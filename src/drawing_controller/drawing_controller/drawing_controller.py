@@ -138,12 +138,13 @@ class DrawingController(Node):
     def timer_callback(self):
         if self.busy:
             return
+        if self.i >= len(self.svg):
+            self.get_logger().info('Finished executing all motions from SVG')
+            exit()
         next_motion = self.svg[self.i]
         motion = Motion()
         self.append_points(motion, next_motion)
         self.i = self.i + 1
-        if self.i >= len(self.svg):
-            exit()
         self.get_logger().info('Executing motion: {}...'.format(motion.path[:10]))
         self.send_goal(motion)
 

@@ -47,7 +47,7 @@ class SVGProcessor():
             Returns:
                     primitive_fn ():
         '''
-        def log_error(p, _):
+        def log_error(p):
            self.logger.error("'{}' not supported".format(p.tag))
            return []
         return self.primitive_fns.get(primitive.tag, log_error)
@@ -104,19 +104,20 @@ class SVGProcessor():
         i = 0
         while i < len(pathstr):
             c = pathstr[i]
+            i += 1
             # Single letter commands
             if c.isalpha():
                 path.append(c)
 
             # Numbers
             if c == '-' or c.isdecimal():
-                s = ""
-                while i < len(pathstr) and not c.isspace():
-                    s = s + c
-                    i += 1
+                s = c
+                while i < len(pathstr) and not (c.isspace() or c == ','):
                     c = pathstr[i]
+                    if c != ',' and not c.isspace():
+                        s = s + c
+                    i += 1
                 path.append(s)
-            i += 1
 
         # Parser
         self.logger.info("Parsing path :'{}...' with {} tokens".format(path[:20], len(path)))
@@ -128,8 +129,19 @@ class SVGProcessor():
             nonlocal i
             i += 1
             return float(path[i])
+
+        def isfloat(element):
+            #If you expect None to be passed:
+            if element is None:
+                return False
+            try:
+                float(element)
+                return True
+            except ValueError:
+                return False
+
         def nextisnum():
-            return path[i+1].isdecimal()
+            return i + 1 < len(path) and isfloat(path[i + 1])
         def setpointup():
             nonlocal output
             p = self.map_point(x,y)
@@ -198,7 +210,26 @@ class SVGProcessor():
                 i += 1
                 continue
             if (w == "c"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    # https://github.com/sintef/Splipy/tree/master/examples
+                    control_points = [(x,y),
+                                      (x + getnum(), y + getnum()),
+                                      (x + getnum(), y + getnum()),
+                                      (x + getnum(), y + getnum())]
+                    control_points = np.array(control_points)
+                    n = 10
+                    curve = cf.cubic_curve(control_points)
+                    lin = np.linspace(curve.start(0), curve.end(0), n)
+                    coordinates = curve(lin)
+                    coordinates = np.nan_to_num(coordinates)
+                    #self.logger.info("Appending curve points: {}".format(coordinates))
+                    x = coordinates[-1][0]
+                    y = coordinates[-1][1]
+                    appendpoints(coordinates)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "S"):
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             if (w == "s"):
@@ -226,7 +257,7 @@ class SVGProcessor():
             self.logger.error("SVG path parser panic mode at '{}'".format(w))
 
             i += 1
-        self.logger.info("Finished parsing path :'{}...' with {} points".format(output[:20], len(output)))
+        self.logger.info("Finished parsing path :'{}...' with {} points".format(output[:3], len(output)))
         return output
 
     # https://stackoverflow.com/questions/30232031/how-can-i-strip-namespaces-out-of-an-lxml-tree
@@ -245,27 +276,37 @@ class SVGProcessor():
             svg = xml.getroot()
             svg = self.strip_ns_prefix(svg)
 
-            if 'width' in svg.attrib:
+            if 'viewBox' in svg.attrib:
+                vb = svg.get('viewBox').split(' ')
+                self.map_point = self.map_point_function(float(vb[2]),
+                                                         float(vb[3]))
+                self.logger.info("Got width:{} and height:{} from viewBox".format(vb[2],vb[3]))
+            elif 'width' in svg.attrib:
                 self.map_point = self.map_point_function(float(svg.get('width')),
                                                          float(svg.get('height')))
-            elif 'viewBox' in svg.attrib:
-                # TODO parse viewBox
-                pass
+                self.logger.info("Got width:{} and height:{} from width and height attributes".format(svg.get('width'),svg.get('height')))
             else:
                self.logger.error("Unable to get SVG dimensions")
 
             motions = []
-            for child in svg:
-               self.logger.info("Attempting to process SVG primitive:'{}'".format(child.tag))
-               primitive_fn = self.primitive_line
-               # path can consist of multiple primitives
-               if (child.tag == 'path'):
-                   #for m in self.path_parser(child):
-                   #    motions.append(m)
-                   motions.append(self.path_parser(child))
-               else:
-                   primitive_fn = self.get_primitive_fn(child)
-                   motions.append(primitive_fn(child))
+            def process_tags(svg):
+                nonlocal motions
+                for child in svg:
+                    self.logger.debug("Attempting to process SVG primitive:'{}'".format(child.tag))
+                    primitive_fn = self.primitive_line
+                    # path can consist of multiple primitives
+                    if (child.tag == 'path'):
+                        #for m in self.path_parser(child):
+                        #    motions.append(m)
+                        motions.append(self.path_parser(child))
+                    elif (child.tag == 'g'):
+                        self.logger.info("Recursively processing SVG primitive:'{}'".format(child.tag))
+                        process_tags(child)
+                    else:
+                        primitive_fn = self.get_primitive_fn(child)
+                        motions.append(primitive_fn(child))
+
+            process_tags(svg)
 
             motions_refined = []
             for m in motions:

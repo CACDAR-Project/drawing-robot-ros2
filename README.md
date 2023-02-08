@@ -71,6 +71,8 @@ ros2 run drawing_controller drawing_controller svg/test.svg
 ## Creating compatible SVG images
 https://github.com/visioncortex/vtracer
 
+Use single layer (g) SVGs
+
 ## ROS2 rpi4
 https://github.com/ros-realtime/ros-realtime-rpi4-image/releases
 
