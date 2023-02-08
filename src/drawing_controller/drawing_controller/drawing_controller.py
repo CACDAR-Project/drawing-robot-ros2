@@ -84,7 +84,8 @@ class DrawingController(Node):
                 self.lines.append((p1,p2))
 
         self.svg_processor = SVGProcessor(self.get_logger())
-        print(self.svg_processor.process_svg(svgpath))
+        self.svg = self.svg_processor.process_svg(svgpath)
+        self.get_logger().info('Ready to begin executing motions')
 
     def send_goal(self, motion):
         self.busy = True
@@ -117,37 +118,33 @@ class DrawingController(Node):
         feedback = feedback_msg.feedback
         self.get_logger().info('Received feedback: {0}'.format(feedback))
 
-    def append_point(self, motion, point, height):
-        p = Pose()
-        #self.get_logger().info('Appending point:{} {}'.format(point[0], point[1]))
-        p.position.x = point[0]
-        p.position.y = point[1]
-        p.position.z = height
-        q = quaternion_from_euler(0.0, math.pi, 0.0)
-        p.orientation = Quaternion()
-        p.orientation.x = q[0]
-        p.orientation.y = q[1]
-        p.orientation.z = q[2]
-        p.orientation.w = q[3]
-        ps = PoseStamped()
-        ps.pose = p
-        motion.path.append(ps)
+    def append_points(self, motion, points):
+        for point in points:
+            p = Pose()
+            #self.get_logger().info('Appending point:{} {}'.format(point[0], point[1]))
+            p.position.x = float(point[0])
+            p.position.y = float(point[1])
+            p.position.z = float(point[2])
+            q = quaternion_from_euler(0.0, math.pi, 0.0)
+            p.orientation = Quaternion()
+            p.orientation.x = q[0]
+            p.orientation.y = q[1]
+            p.orientation.z = q[2]
+            p.orientation.w = q[3]
+            ps = PoseStamped()
+            ps.pose = p
+            motion.path.append(ps)
 
     def timer_callback(self):
         if self.busy:
             return
-        next_line = self.lines[self.i]
+        next_motion = self.svg[self.i]
         motion = Motion()
-        p1 = self.map_point(next_line[0][0],next_line[0][1])
-        p2 = self.map_point(next_line[1][0],next_line[1][1])
-        self.get_logger().info('Drawing line with p1:{} p2:{}'.format(p1,p2))
-        self.append_point(motion, p1, 1.0)
-        self.append_point(motion, p1, 0.0)
-        self.append_point(motion, p2, 0.0)
-        self.append_point(motion, p2, 1.0)
-        self.i = (self.i + 1) % len(self.lines)
-
-        self.get_logger().info('Executing motion:{}'.format(motion.path))
+        self.append_points(motion, next_motion)
+        self.i = self.i + 1
+        if self.i >= len(self.svg):
+            exit()
+        self.get_logger().info('Executing motion: {}...'.format(motion.path[:10]))
         self.send_goal(motion)
 
 

@@ -144,6 +144,7 @@ class SVGProcessor():
                 p = self.map_point(x,y)
                 output.append((p[0],p[1],0.0))
 
+
         while i < len(path):
             w = path[i]
             # MoveTo commands
@@ -176,20 +177,21 @@ class SVGProcessor():
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             # Cubic Bézier Curve commands
             if (w == "C"):
-                self.logger.info("SVG path parser cubic bezier curve at i={}".format(i))
                 while True:
                     # https://github.com/sintef/Splipy/tree/master/examples
                     control_points = [(x,y),
                                       (getnum(),getnum()),
                                       (getnum(),getnum()),
                                       (getnum(),getnum())]
-                    x = control_points[-1][0]
-                    y = control_points[-1][1]
                     control_points = np.array(control_points)
                     n = 10
                     curve = cf.cubic_curve(control_points)
                     lin = np.linspace(curve.start(0), curve.end(0), n)
-                    coordinates = curve(lin)                                 # physical (x,y)-coordinates, size (n,2)
+                    coordinates = curve(lin)
+                    coordinates = np.nan_to_num(coordinates)
+                    #self.logger.info("Appending curve points: {}".format(coordinates))
+                    x = coordinates[-1][0]
+                    y = coordinates[-1][1]
                     appendpoints(coordinates)
                     if not nextisnum():
                         break
@@ -216,14 +218,15 @@ class SVGProcessor():
             if (w == "a"):
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             # ClosePath commands
-            if (w == "Z"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
-            if (w == "z"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+            if (w == "Z" or w == "z"):
+               #TODO draw line if start and end point not are the same
+               i += 1
+               continue
+
             self.logger.error("SVG path parser panic mode at '{}'".format(w))
 
             i += 1
-        self.logger.info("Finished parsing path")
+        self.logger.info("Finished parsing path :'{}...' with {} points".format(output[:20], len(output)))
         return output
 
     # https://stackoverflow.com/questions/30232031/how-can-i-strip-namespaces-out-of-an-lxml-tree
@@ -257,8 +260,9 @@ class SVGProcessor():
                primitive_fn = self.primitive_line
                # path can consist of multiple primitives
                if (child.tag == 'path'):
-                   for m in self.path_parser(child):
-                       motions.append(m)
+                   #for m in self.path_parser(child):
+                   #    motions.append(m)
+                   motions.append(self.path_parser(child))
                else:
                    primitive_fn = self.get_primitive_fn(child)
                    motions.append(primitive_fn(child))
@@ -267,7 +271,7 @@ class SVGProcessor():
             for m in motions:
                 if m == []:
                     continue
-                self.logger.info("Refining:'{}'".format(m))
+                #self.logger.info("Refining:'{}...'".format(m[:3]))
                 motions_refined.append(self.down_and_up(m))
             return motions_refined
 
