@@ -158,10 +158,9 @@ class AxidrawController : public RobotController
       else
       {
         this->pendown_pub->publish(std_msgs::msg::Empty());
-        while (i + 1 < points.size() && points[i + 1].z <= 0)
+        while (i + count + 1 < points.size() && points[i + count + 1].z <= 0)
         {
           count++;
-          i++;
         }
       }
 
@@ -184,6 +183,7 @@ class AxidrawController : public RobotController
         RCLCPP_INFO(this->get_logger(), log.c_str());
         this->path_pub->publish(msg);
       }
+      i += count;
 
       // Update status
       feedback->status = std::to_string(i+1) + "/" + std::to_string(points.size()) + " complete";
