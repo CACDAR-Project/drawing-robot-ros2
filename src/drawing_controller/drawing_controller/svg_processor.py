@@ -3,6 +3,7 @@
 import lxml.etree as ET
 import splipy.curve_factory as cf
 import numpy as np
+import math
 
 class SVGProcessor():
     """
@@ -316,9 +317,45 @@ class SVGProcessor():
             for m in motions:
                 if m == []:
                     continue
+
+                mm = self.remove_homes(m)
+                mm = self.remove_redundant(mm)
+
                 #self.logger.info("Refining:'{}...'".format(m[:3]))
-                motions_refined.append(self.down_and_up(m))
+                motions_refined.append(self.down_and_up(mm))
+
+            # Move to home at end
+            motions_refined.append([(0.0, 0.0, 1.0)])
             return motions_refined
+
+    def remove_homes(self, motion):
+        # Remove unnecessary moves home
+        mm = []
+        for p in motion:
+            if p[0] <= 0.0 and p[1] <= 0.0:
+                continue
+            mm.append(p)
+        return mm
+
+    def remove_redundant(self, motion):
+        # Remove points that are too close to the previous point, specified by the tolerance
+        mm = []
+        tolerance = 0.005
+        prev = (-1, -1, 0)
+        for i, p in enumerate(motion):
+            next = motion[(i + 1) % len(motion)]
+            if (p[2] <= 0):
+                x = p[0]
+                y = p[1]
+                px = prev[0]
+                py = prev[1]
+                xdiff = abs(x - px)
+                ydiff = abs(y - py)
+                if xdiff < tolerance and ydiff < tolerance and next[2] <= 0:
+                    continue
+            prev = p
+            mm.append(p)
+        return mm
 
     def translate(self, val, lmin, lmax, rmin, rmax):
         lspan = lmax - lmin
