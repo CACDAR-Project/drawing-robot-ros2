@@ -35,6 +35,10 @@ class SVGProcessor():
             "polyline": self.primitive_polyline,
             "polygon": self.primitive_polygon,
         }
+        # Landscape A4: 210 x 297 mm
+        self.paper_width = 297
+        self.paper_height = 210
+
         self.map_point = self.map_point_function(1000,
                                                 1000)
 
@@ -323,9 +327,18 @@ class SVGProcessor():
         return rmin + (val * rspan)
 
     def map_point_function(self, x_pixels, y_pixels):
+        x_offset = 0
+        y_offset = 0
+        if (x_pixels > y_pixels):
+            ratio =  self.paper_height / self.paper_width
+            y_offset = x_pixels * ratio - y_pixels
+        else:
+            ratio = self.paper_width / self.paper_height
+            x_offset = y_pixels * ratio - x_pixels
+
         def map_point(xpix,ypix):
-            x = self.translate(xpix, 0, x_pixels, 0, 1)
-            y = self.translate(ypix, 0, y_pixels, 0, 1)
+            x = self.translate(xpix, 0, x_pixels + x_offset, 0, 1)
+            y = self.translate(ypix, 0, y_pixels + y_offset, 0, 1)
             return (x,y)
         return map_point
 
