@@ -77,7 +77,7 @@ public:
   /**
    * CommandListManager, used to plan MotionSequenceRequest
    */
-  pilz_industrial_motion_planner::CommandListManager command_list_manager;
+  //pilz_industrial_motion_planner::CommandListManager command_list_manager;
   //pilz_industrial_motion_planner::CommandListManager command_list_manager(*std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
 
   /**
@@ -85,10 +85,10 @@ public:
    */
   Lite6Controller(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
     : RobotController(options),
-      move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP),
+      move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP)
       //moveit_cpp_(std::shared_ptr<rclcpp::Node>(std::move(this))),
       //planning_component_(MOVE_GROUP, moveit_cpp_),
-      command_list_manager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel())
+      //command_list_manager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel())
   {
 
     //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
