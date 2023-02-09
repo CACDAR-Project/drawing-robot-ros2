@@ -189,7 +189,7 @@ class AxidrawSerial(Node):
         '''
         self.set_busy()
 
-        self.get_logger().info("Received path: {}".format(msg))
+        self.get_logger().info("Received path: {}...".format(msg[:6]))
 
         path = [ [p.x,p.y] for p in msg.points ]
         self.ad.draw_path(path)
