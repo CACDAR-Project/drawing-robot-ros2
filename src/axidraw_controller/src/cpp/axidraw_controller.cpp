@@ -143,6 +143,8 @@ class AxidrawController : public RobotController
 
       auto p = points[i];
 
+      long unsigned int count = 0;
+
       // Ensure axidraw is not busy
       while (!is_ready())
       {
@@ -154,7 +156,14 @@ class AxidrawController : public RobotController
       if (p.z > 0)
         this->penup_pub->publish(std_msgs::msg::Empty());
       else
+      {
         this->pendown_pub->publish(std_msgs::msg::Empty());
+        while (i + 1 < points.size() && points[i + 1].z <= 0)
+        {
+          count++;
+          i++;
+        }
+      }
 
       // Wait for pen movement to complete
       while (!is_ready())
@@ -164,7 +173,17 @@ class AxidrawController : public RobotController
         loop_rate.sleep();
       }
 
-      this->move_pub->publish(p);
+      if (count == 0)
+        this->move_pub->publish(p);
+      else
+      {
+        std::vector<geometry_msgs::msg::Point> ps(&points[i],&points[i+count]);
+        robot_interfaces::msg::Points msg;
+        msg.points = ps;
+        std::string log = "Publishing path with " + std::to_string(ps.size()) + " points";
+        RCLCPP_INFO(this->get_logger(), log.c_str());
+        this->path_pub->publish(msg);
+      }
 
       // Update status
       feedback->status = std::to_string(i+1) + "/" + std::to_string(points.size()) + " complete";
