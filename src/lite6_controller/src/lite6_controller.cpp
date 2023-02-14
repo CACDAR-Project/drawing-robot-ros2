@@ -170,12 +170,12 @@ public:
   //
 
   // Set limits for A4 paper
-  float xlim_lower = 0.12;
-  float xlim_upper = 0.2;
-  float ylim_lower = -0.2;
-  float ylim_upper = 0.2;
-  float zlim_lower = 0.1;
-  float zlim_upper = 0.2;
+  float xlim_lower = 0.20;
+  float xlim_upper = 0.40;
+  float ylim_lower = -0.20;
+  float ylim_upper = 0.20;
+  float zlim_lower = 0.145;
+  float zlim_upper = 0.16;
 
   /**
    * Function that translates an input value with a given range to a value within another range.
@@ -194,8 +194,11 @@ public:
   geometry_msgs::msg::PoseStamped translatePose(geometry_msgs::msg::PoseStamped pose)
   {
     // TODO support paper angle
-    pose.pose.position.x = translate(pose.pose.position.x, 0, 1, xlim_lower, xlim_upper);
-    pose.pose.position.y = translate(pose.pose.position.y, 0, 1, ylim_lower, ylim_upper);
+    auto x = pose.pose.position.x;
+    auto y = pose.pose.position.y;
+    // X and Y are swapped in xArm space
+    pose.pose.position.x = translate(y, 0, 1, xlim_lower, xlim_upper);
+    pose.pose.position.y = translate(x, 0, 1, ylim_lower, ylim_upper);
     pose.pose.position.z = translate(pose.pose.position.z, 0, 1, zlim_lower, zlim_upper);
 
     return pose;
@@ -211,10 +214,12 @@ public:
   /**
    * Creates a trajectory for a pose and appends it to a given trajectory
    */
-  void addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
+  bool addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
   {
     pose = translatePose(pose);
-    move_group.setPoseTarget(pose);
+    //move_group.setPoseTarget(pose);
+    move_group.setApproximateJointValueTarget(pose, "link_eef");
+
     //moveit_msgs::msg::RobotTrajectory trajectory;
     //move_group.setPlanningPipelineId("PTP");
     move_group.setPlannerId("PTP");
@@ -227,21 +232,25 @@ public:
     bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
     RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED");
 
-    robot_trajectory::RobotTrajectory next_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-    next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
+    if (success)
+    {
+      robot_trajectory::RobotTrajectory next_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
+      next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
 
-    // append trajectory, with time step of 2.0, not skipping any points
-    previous_trajectory.append(next_trajectory, 2.0, 0);
-    *trajectory = moveit_msgs::msg::RobotTrajectory();
-    previous_trajectory.getRobotTrajectoryMsg(*trajectory);
+      // append trajectory, with time step of 2.0, not skipping any points
+      previous_trajectory.append(next_trajectory, 0.01, 0);
+      *trajectory = moveit_msgs::msg::RobotTrajectory();
+      previous_trajectory.getRobotTrajectoryMsg(*trajectory);
 
-    // Append segment to complete trajectory
-    //trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
-    //                                    plan.trajectory_.joint_trajectory.points.begin(),
-    //                                    plan.trajectory_.joint_trajectory.points.end());
-    //trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
+      // Append segment to complete trajectory
+      //trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
+      //                                    plan.trajectory_.joint_trajectory.points.begin(),
+      //                                    plan.trajectory_.joint_trajectory.points.end());
+      //trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
 
+    }
     move_group.clearPoseTarget();
+    return success;
   }
 
   /**
@@ -286,7 +295,7 @@ public:
       //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
 
       // Append next pose to trajectory
-      addPoseToTrajectory(p, &multi_trajectory);
+      if (!addPoseToTrajectory(p, &multi_trajectory)) continue;
 
       // set move_group start state to final pose of trajectory
       //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");

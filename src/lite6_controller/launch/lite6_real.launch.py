@@ -171,6 +171,11 @@ def launch_setup(context, *args, **kwargs):
         if joint_limits_yaml and gripper_joint_limits_yaml:
             joint_limits_yaml['joint_limits'].update(gripper_joint_limits_yaml['joint_limits'])
 
+    # FIX acceleration limits
+    for i in range(1,7):
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 0.5
+
     add_prefix_to_moveit_params = getattr(mod, 'add_prefix_to_moveit_params')
     add_prefix_to_moveit_params(
         controllers_yaml=controllers_yaml, ompl_planning_yaml=ompl_planning_yaml,
@@ -222,6 +227,16 @@ def launch_setup(context, *args, **kwargs):
         # },
     }
 
+
+    pilz_planning_pipeline_config = {
+        'move_group': {
+            'planning_plugin': 'pilz_industrial_motion_planner/CommandPlanner',
+            'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            "default_planner_config": "PTP",
+            "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService",
+        }
+    }
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -229,7 +244,8 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[
             robot_description_parameters,
-            ompl_planning_pipeline_config,
+            #ompl_planning_pipeline_config,
+            pilz_planning_pipeline_config,
             trajectory_execution,
             plan_execution,
             moveit_controllers,
