@@ -214,7 +214,7 @@ public:
   /**
    * Creates a trajectory for a pose and appends it to a given trajectory
    */
-  bool addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
+  bool addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory, moveit::core::RobotStatePtr state)
   {
     pose = translatePose(pose);
     move_group.setPoseTarget(pose);
@@ -224,21 +224,21 @@ public:
     //move_group.setPlanningPipelineId("PTP");
     move_group.setPlannerId("PTP");
 
-    robot_trajectory::RobotTrajectory previous_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-    previous_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), *trajectory);
+    robot_trajectory::RobotTrajectory previous_trajectory(state->getRobotModel(), move_group.getName());
+    previous_trajectory.setRobotTrajectoryMsg(*state, *trajectory);
 
 
     moveit::planning_interface::MoveGroupInterface::Plan plan;
     bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
-    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED");
+    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED, trying approximate method (if enabled)");
 
     if (success)
     {
-      robot_trajectory::RobotTrajectory next_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-      next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
+      robot_trajectory::RobotTrajectory next_trajectory(state->getRobotModel(), move_group.getName());
+      next_trajectory.setRobotTrajectoryMsg(*state, plan.trajectory_);
 
       // append trajectory, with time step of 2.0, not skipping any points
-      previous_trajectory.append(next_trajectory, 0.01, 0);
+      previous_trajectory.append(next_trajectory, 0.000001, 0);
       *trajectory = moveit_msgs::msg::RobotTrajectory();
       previous_trajectory.getRobotTrajectoryMsg(*trajectory);
 
@@ -251,7 +251,9 @@ public:
     }
     else
     {
-      success = addPoseToTrajectoryApproximate(pose, trajectory);
+      // Unsafe approximate solution
+      // Likely to break pens
+      //success = addPoseToTrajectoryApproximate(pose, trajectory);
     }
     move_group.clearPoseTarget();
     return success;
@@ -280,7 +282,7 @@ public:
       next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
 
       // append trajectory, with time step of 2.0, not skipping any points
-      previous_trajectory.append(next_trajectory, 0.01, 0);
+      previous_trajectory.append(next_trajectory, 0.0001, 0);
       *trajectory = moveit_msgs::msg::RobotTrajectory();
       previous_trajectory.getRobotTrajectoryMsg(*trajectory);
 
@@ -332,18 +334,21 @@ public:
     robot_trajectory::RobotTrajectory single_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
 
     move_group.setStartStateToCurrentState();
+    moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
     for (auto p : goal->motion.path)
     {
       //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
 
       // Append next pose to trajectory
-      if (!addPoseToTrajectory(p, &multi_trajectory)) continue;
+      if (!addPoseToTrajectory(p, &multi_trajectory, move_group_state)) continue;
 
       // set move_group start state to final pose of trajectory
       //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");
-      single_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), multi_trajectory);
+      single_trajectory.setRobotTrajectoryMsg(*move_group_state, multi_trajectory);
       //rt.setRobotTrajectoryMsg(rt.getLastWayPoint(), trajectory);
       //RCLCPP_INFO(this->get_logger(), "getLastWayPoint");
+      //
+      //moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
       moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
       //RCLCPP_INFO(this->get_logger(), "eef");
       //const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
