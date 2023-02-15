@@ -172,10 +172,10 @@ public:
   // Set limits for A4 paper
   float xlim_lower = 0.20;
   float xlim_upper = 0.40;
-  float ylim_lower = -0.20;
-  float ylim_upper = 0.20;
-  float zlim_lower = 0.145;
-  float zlim_upper = 0.16;
+  float ylim_lower = -0.13;
+  float ylim_upper = 0.15;
+  float zlim_lower = 0.150;
+  float zlim_upper = 0.17;
 
   /**
    * Function that translates an input value with a given range to a value within another range.
@@ -217,11 +217,53 @@ public:
   bool addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
   {
     pose = translatePose(pose);
-    //move_group.setPoseTarget(pose);
-    move_group.setApproximateJointValueTarget(pose, "link_eef");
+    move_group.setPoseTarget(pose);
+    //move_group.setApproximateJointValueTarget(pose, "link_eef");
 
     //moveit_msgs::msg::RobotTrajectory trajectory;
     //move_group.setPlanningPipelineId("PTP");
+    move_group.setPlannerId("PTP");
+
+    robot_trajectory::RobotTrajectory previous_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
+    previous_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), *trajectory);
+
+
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+    bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED");
+
+    if (success)
+    {
+      robot_trajectory::RobotTrajectory next_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
+      next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
+
+      // append trajectory, with time step of 2.0, not skipping any points
+      previous_trajectory.append(next_trajectory, 0.01, 0);
+      *trajectory = moveit_msgs::msg::RobotTrajectory();
+      previous_trajectory.getRobotTrajectoryMsg(*trajectory);
+
+      // Append segment to complete trajectory
+      //trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
+      //                                    plan.trajectory_.joint_trajectory.points.begin(),
+      //                                    plan.trajectory_.joint_trajectory.points.end());
+      //trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
+
+    }
+    else
+    {
+      success = addPoseToTrajectoryApproximate(pose, trajectory);
+    }
+    move_group.clearPoseTarget();
+    return success;
+  }
+
+  /**
+   * Creates a trajectory for a pose and appends it to a given trajectory
+   */
+  bool addPoseToTrajectoryApproximate(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
+  {
+    pose = translatePose(pose);
+    move_group.setApproximateJointValueTarget(pose, "link_eef");
     move_group.setPlannerId("PTP");
 
     robot_trajectory::RobotTrajectory previous_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
