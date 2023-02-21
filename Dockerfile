@@ -39,37 +39,33 @@ RUN apt-get update && \
     apt-get install -yq python3-pip && \
     pip install --upgrade --upgrade-strategy eager splipy
 
-### Import and install dependencies, then build these dependencies (not ign_moveit2_examples yet)
-COPY ./drawing_robot_ros2.repos ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos
-RUN vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/ign_moveit2_examples/drawing_robot_ros2.repos && \
-    rosdep update && \
-    apt-get update && \
-    rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR} && \
-    rm -rf /var/lib/apt/lists/* && \
-    source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
-    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" && \
+# Build interfaces and generic controller first
+COPY ./src/robot_interfaces ${WS_SRC_DIR}/robot_interfaces
+COPY ./src/robot_controller ${WS_SRC_DIR}/robot_controller
+RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/robot_interfaces ${WS_SRC_DIR}/robot_controller && \
     rm -rf ${WS_LOG_DIR}
 
-### Copy over the rest of ign_moveit2_examples, then install dependencies and build
-COPY ./ ${WS_SRC_DIR}/ign_moveit2_examples/
-RUN rosdep update && \
-    apt-get update && \
-    rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR} && \
-    rm -rf /var/lib/apt/lists/* && \
-    source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
-    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" && \
+# Build packages
+COPY ./src/draw_svg ${WS_SRC_DIR}/draw_svg
+COPY ./src/drawing_controller ${WS_SRC_DIR}/drawing_controller
+COPY ./src/axidraw_controller ${WS_SRC_DIR}/axidraw_controller
+RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
+    source "${WS_INSTALL_DIR}/local_setup.bash" && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/draw_svg ${WS_SRC_DIR}/drawing_controller ${WS_SRC_DIR}/axidraw_controller && \
     rm -rf ${WS_LOG_DIR}
 
-### Copy code built on top of example ign_moveit2_examples
-# TODO clean build process
-COPY ./src/* ${WS_SRC_DIR}/
-RUN rosdep update && \
-    apt-get update && \
-    rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR} && \
-    rm -rf /var/lib/apt/lists/* && \
-    source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
-    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" && \
+# Build lite6 and xarm packages
+COPY ./src/lite6_controller ${WS_SRC_DIR}/lite6_controller
+RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
+    vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/lite6_controller/lite6_controller.repos && \
+    mv ${WS_SRC_DIR}/xarm_ros2/xarm* ${WS_SRC_DIR} && \
+    rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR}/xarm_* && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/xarm_* ${WS_SRC_DIR}/lite6_controller && \
     rm -rf ${WS_LOG_DIR}
+
+# Copy example svg images
+COPY ./svg svg
 
 ### Add workspace to the ROS entrypoint
 ### Source ROS workspace inside `~/.bashrc` to enable autocompletion
