@@ -184,8 +184,13 @@ public:
   {
     float lspan = lmax - lmin;
     float rspan = rmax - rmin;
-    val = (val - lmin) / lspan;
-    return rmin + (val * rspan);
+    float out = (val - lmin) / lspan;
+    out = rmin + (val * rspan);
+
+    // Ensure that output is within bounds
+    out = std::max(rmin, out);
+    out = std::min(rmax, out);
+    return out;
   }
 
   /**
