@@ -25,7 +25,7 @@ bash .docker/devel.bash
 ```
 This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
 
-## Building locally
+## TODO Building locally
 
 Requirements:
 - python3-pip 
@@ -42,32 +42,41 @@ source src/install/local_setup.bash
 ```
 
 ## Running
+### RobotController
+One of the following RobotControllers should be started:
 
-Run
+DummyController echoes Motion messages to the terminal.
 ``` sh
 ros2 run robot_controller dummy_controller
 ```
-or
+
+AxidrawController draws on the axidraw robot
 ``` sh
 ros2 launch axidraw_controller axidraw_controller
 ```
-or
+
+This starts the simulated lite6
 ``` sh
 ros2 launch lite6_controller lite6_gazebo.launch.py
 ```
-or
+
+This runs the real lite6
 ``` sh
 ros2 launch lite6_controller lite6_real.launch.py
 ```
-or
+
+This runs the real lite6 without Rviz (can be run on headless device over ssh)
 ``` sh
 ros2 launch lite6_controller lite6_real_no_gui.launch.py
 ```
 
-And simultaneously (using tmux or another terminal) run
+### DrawingController
+Once a RobotController is running, simultaneously (using tmux or another terminal) run
 ``` sh
 ros2 run drawing_controller drawing_controller svg/test.svg
 ```
+This will draw the svg image given as the last argument.
+
 ## Creating compatible SVG images
 https://github.com/visioncortex/vtracer
 
