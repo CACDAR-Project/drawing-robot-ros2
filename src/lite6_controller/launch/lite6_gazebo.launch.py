@@ -371,9 +371,13 @@ def launch_setup(context, *args, **kwargs):
             'planning_plugin': 'pilz_industrial_motion_planner/CommandPlanner',
             'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
             "default_planner_config": "PTP",
-            "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService",
         }
     }
+
+    move_group_capabilities = {
+        "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService"
+    }
+
 
 
     # Moveit controllers Configuration
@@ -420,6 +424,7 @@ def launch_setup(context, *args, **kwargs):
             robot_description_parameters,
             #ompl_planning_pipeline_config,
             pilz_planning_pipeline_config,
+            move_group_capabilities,
             trajectory_execution,
             plan_execution,
             moveit_controllers,
