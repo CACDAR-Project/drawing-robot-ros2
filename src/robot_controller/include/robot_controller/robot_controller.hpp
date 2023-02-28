@@ -58,7 +58,7 @@ rclcpp_action::GoalResponse RobotController::motion_handle_goal(
   const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const ExecuteMotion::Goal> goal)
 {
-  RCLCPP_INFO(this->get_logger(), "Received goal request with acceleration %f", goal->motion.acceleration);
+  RCLCPP_INFO(this->get_logger(), "Received goal request with %ld poses", goal->motion.path.size());
   (void)uuid;
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
