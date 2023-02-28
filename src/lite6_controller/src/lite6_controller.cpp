@@ -2,6 +2,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <robot_controller/robot_controller.hpp>
 #include <chrono>
+//#include <queue>
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose.hpp>
@@ -26,6 +27,7 @@
 #include <moveit_msgs/msg/motion_plan_request.hpp>
 #include <moveit_msgs/msg/motion_sequence_request.hpp>
 #include <moveit_msgs/msg/motion_sequence_item.hpp>
+#include <moveit_msgs/srv/get_motion_sequence.hpp>
 
 
 #include <moveit/moveit_cpp/moveit_cpp.h>
@@ -67,6 +69,18 @@ public:
   moveit_cpp::MoveItCppPtr moveit_cpp_;
   moveit_cpp::PlanningComponentPtr planning_component_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+  rclcpp::Client<moveit_msgs::srv::GetMotionSequence>::SharedPtr sequence_client_;
+
+  //std::queue<std::pair<moveit_msgs::msg::RobotTrajectory,rclcpp_action::ServerGoalHandle<ExecuteMotion>>> trajectory_queue;
+
+  // Set limits for A4 paper
+  // 297x210
+  float xlim_lower = 0.10;
+  float xlim_upper = 0.25;
+  float ylim_lower = -0.10;
+  float ylim_upper = 0.115;
+  float zlim_lower = 0.157;
+  float zlim_upper = 0.17;
 
   //bool moved = false;
   //
@@ -105,7 +119,8 @@ public:
   void setup()
   {
     //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(move_group.getNodeHandle());
-    try {
+    try
+    {
       //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(this->shared_from_this());
       //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(move_group.getNodeHandle());
       //planning_component_ = std::make_shared<moveit_cpp::PlanningComponent>(MOVE_GROUP, moveit_cpp_);
@@ -113,6 +128,17 @@ public:
 
       planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(this->shared_from_this(),
                                                                                                "robot_description");
+      this->sequence_client_ =
+        this->create_client<moveit_msgs::srv::GetMotionSequence>("plan_sequence_path");
+
+      while (!sequence_client_->wait_for_service(1s)) {
+        if (!rclcpp::ok()) {
+          RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the 'plan_sequence_path' service. Exiting.");
+          return;
+        }
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "'plan_sequence_path' service not available, waiting again...");
+      }
+
     }
     catch (int e) {
       RCLCPP_ERROR(this->get_logger(), "Initialization Failed: %d", e);
@@ -168,14 +194,6 @@ public:
   // https://answers.ros.org/question/330632/moveit-motion-planning-how-should-i-splice-several-planned-motion-trajectories/
   // https://groups.google.com/g/moveit-users/c/lZL2HTjLu-k
   //
-
-  // Set limits for A4 paper
-  float xlim_lower = 0.10;
-  float xlim_upper = 0.30;
-  float ylim_lower = -0.13;
-  float ylim_upper = 0.15;
-  float zlim_lower = 0.157;
-  float zlim_upper = 0.17;
 
   /**
    * Function that translates an input value with a given range to a value within another range.
@@ -302,6 +320,34 @@ public:
     return success;
   }
 
+  bool sendMSR(moveit_msgs::msg::MotionSequenceRequest msr)
+  {
+    RCLCPP_INFO(this->get_logger(), "Creating req");
+    auto req = rclcpp::Client<moveit_msgs::srv::GetMotionSequence>::SharedRequest();
+    RCLCPP_INFO(this->get_logger(), "Setting msr request");
+    req->request = msr;
+    RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
+    auto result = sequence_client_->async_send_request(req);
+    // Wait for the result.
+    if (rclcpp::spin_until_future_complete(this->shared_from_this(), result) ==
+        rclcpp::FutureReturnCode::SUCCESS)
+    {
+      //RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sum: %ld", result.get()->sum);
+      //trajectory = result.get()->response->trajectory;
+      for (auto t : result.get()->response.planned_trajectories)
+      {
+        // TODO
+        //trajectory->append(t, 0.0001, 0);
+        RCLCPP_INFO(this->get_logger(), "Executing trajectory of length: %ld", t.joint_trajectory.points.size());
+        this->move_group.execute(t);
+      }
+      return true;
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "Failed to call motion sequence service");
+      return false;
+    }
+  }
+
   /**
    * Callback that executes path on robot
    */
@@ -322,51 +368,127 @@ public:
     //}
     //moveit::core::RobotStatePtr start_robot_state = moveit_cpp_->getCurrentState(2.0);
 
-    //moveit_msgs::msg::MotionSequenceRequest msr;
-    ////waypoints.push_back(move_group.getCurrentPose().pose);
-    //for (auto p : goal->motion.path)
-    //{
-    //  RCLCPP_INFO(this->get_logger(), "Creating MSI");
-    //  moveit_msgs::msg::MotionSequenceItem msi;
-    //  msi.req = createRequest(p);
-    //  msi.blend_radius = 0.001; //TODO make configurable
-    //  msr.items.push_back(msi);
-    //}
-    //RCLCPP_INFO(this->get_logger(), "Created MSR");
-
-    moveit_msgs::msg::RobotTrajectory multi_trajectory;
-    //robot_trajectory::RobotTrajectory rt(move_group.getRobotModel(), MOVE_GROUP);
-    robot_trajectory::RobotTrajectory single_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-
-    move_group.setStartStateToCurrentState();
-    moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
+    moveit_msgs::msg::MotionSequenceRequest msr = moveit_msgs::msg::MotionSequenceRequest();
+    //waypoints.push_back(move_group.getCurrentPose().pose);
+    std::string ee_link = move_group.getLinkNames().back();
+    RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
     for (auto p : goal->motion.path)
     {
-      //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
+      //RCLCPP_INFO(this->get_logger(), "Creating MSI");
+      moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
 
-      // Append next pose to trajectory
-      if (!addPoseToTrajectory(p, &multi_trajectory, move_group_state)) continue;
+    planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
+    mpr.planner_id = "PTP";
+    mpr.allowed_planning_time = 100;
+    mpr.max_cartesian_speed = 1; // m/s
+    //mpr.goal_constraints.position_constraints.header.frame_id = "world";
 
-      // set move_group start state to final pose of trajectory
-      //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");
-      single_trajectory.setRobotTrajectoryMsg(*move_group_state, multi_trajectory);
-      //rt.setRobotTrajectoryMsg(rt.getLastWayPoint(), trajectory);
-      //RCLCPP_INFO(this->get_logger(), "getLastWayPoint");
-      //
-      //moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
-      moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
-      //RCLCPP_INFO(this->get_logger(), "eef");
-      //const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
-      //geometry_msgs::msg::Pose pose;
-      //pose = Eigen::toMsg(eef_transform);
-      move_group.setStartState(robot_state);
+    // A tolerance of 0.01 m is specified in position
+    // and 0.01 radians in orientation
+    std::vector<double> tolerance_pose(3, 0.01);
+    std::vector<double> tolerance_angle(3, 0.01);
 
 
-      //trajectory = moveit_msgs::msg::RobotTrajectory();
+    // Set motion goal of end effector link
+    //std::string ee_link = moveit_cpp_->getRobotModel()->getJointModelGroup(planning_component_->getPlanningGroupName())->getLinkModelNames().back();
+    //RCLCPP_INFO(this->get_logger(), "Got ee_link");
+
+
+    mpr.group_name = MOVE_GROUP;
+    //moveit_msgs::msg::Constraints pose_goal =
+    //  kinematic_constraints::constructGoalConstraints(ee_link, p, tolerance_pose, tolerance_angle);
+      //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
+    moveit_msgs::msg::Constraints pose_goal =
+      kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
+      //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
+      //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
+
+    mpr.goal_constraints.push_back(pose_goal);
+    mpr.max_velocity_scaling_factor = 1.0;
+    mpr.max_acceleration_scaling_factor = 1.0;
+
+      msi.req = mpr;
+      msi.blend_radius = 0.001; //TODO make configurable
+      msr.items.push_back(msi);
     }
+    msr.items.back().blend_radius = 0.0; // Last element blend must be 0
+    moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
+    moveit_msgs::msg::RobotState state_msg;
+    moveit::core::robotStateToRobotStateMsg(*move_group_state, state_msg);
+    msr.items.front().req.start_state = state_msg;
+    RCLCPP_INFO(this->get_logger(), "Created MSR");
 
-    RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", multi_trajectory.joint_trajectory.points.size());
-    this->move_group.execute(multi_trajectory);
+    //moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
+    //robot_trajectory::RobotTrajectory trajectory(move_group_state.move_group.getName());
+    //moveit_msgs::msg::RobotTrajectory *trajectory_msg;
+    //sendMSR(msr);
+    RCLCPP_INFO(this->get_logger(), "Creating req");
+    auto req = std::make_shared<moveit_msgs::srv::GetMotionSequence::Request>();
+    RCLCPP_INFO(this->get_logger(), "Setting msr request");
+    req->request = msr;
+    RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
+    auto res = sequence_client_->async_send_request(req);
+    // Wait for the result.
+    res.wait();
+    try
+    {
+      for (auto t : res.get()->response.planned_trajectories)
+      {
+        // TODO
+        //trajectory->append(t, 0.0001, 0);
+        RCLCPP_INFO(this->get_logger(), "Executing trajectory of length: %ld", t.joint_trajectory.points.size());
+        this->move_group.execute(t);
+      }
+    }
+    catch(const std::exception& e)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Failed to call motion sequence service");
+    }
+    //if (plan_success)
+    //{
+    //  //trajectory.setRobotTrajectoryMsg(*move_group_state, trajectory_msg);
+    //  RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", trajectory_msg->joint_trajectory.points.size());
+    //  this->move_group.execute(*trajectory_msg);
+    //}
+    //else
+    //{
+    //  RCLCPP_ERROR(this->get_logger(), "Motion sequence planning failed, not executing");
+    //}
+
+
+    //moveit_msgs::msg::RobotTrajectory multi_trajectory;
+    ////robot_trajectory::RobotTrajectory rt(move_group.getRobotModel(), MOVE_GROUP);
+    //robot_trajectory::RobotTrajectory single_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
+
+    //move_group.setStartStateToCurrentState();
+    //moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
+    //for (auto p : goal->motion.path)
+    //{
+    //  //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
+
+    //  // Append next pose to trajectory
+    //  if (!addPoseToTrajectory(p, &multi_trajectory, move_group_state)) continue;
+
+    //  // set move_group start state to final pose of trajectory
+    //  //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");
+    //  single_trajectory.setRobotTrajectoryMsg(*move_group_state, multi_trajectory);
+    //  //rt.setRobotTrajectoryMsg(rt.getLastWayPoint(), trajectory);
+    //  //RCLCPP_INFO(this->get_logger(), "getLastWayPoint");
+    //  //
+    //  //moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
+    //  moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
+    //  //RCLCPP_INFO(this->get_logger(), "eef");
+    //  //const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
+    //  //geometry_msgs::msg::Pose pose;
+    //  //pose = Eigen::toMsg(eef_transform);
+    //  move_group.setStartState(robot_state);
+
+
+    //  //trajectory = moveit_msgs::msg::RobotTrajectory();
+    //}
+
+    //RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", multi_trajectory.joint_trajectory.points.size());
+    //this->move_group.execute(multi_trajectory);
 
     //double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     //RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
