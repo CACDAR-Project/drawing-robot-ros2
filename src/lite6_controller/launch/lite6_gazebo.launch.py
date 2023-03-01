@@ -369,7 +369,9 @@ def launch_setup(context, *args, **kwargs):
     pilz_planning_pipeline_config = {
         'move_group': {
             'planning_plugin': 'pilz_industrial_motion_planner/CommandPlanner',
-            'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            # Disable AddTimeOptimalParameterization to fix motion blending https://github.com/ros-planning/moveit/issues/2905
+            'request_adapters': """default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            #'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
             "default_planner_config": "PTP",
         }
     }

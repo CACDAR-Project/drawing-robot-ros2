@@ -372,13 +372,19 @@ public:
     //waypoints.push_back(move_group.getCurrentPose().pose);
     std::string ee_link = move_group.getLinkNames().back();
     RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
+    long n = 0;
     for (auto p : goal->motion.path)
     {
+      //if (n <= 0) continue;
+      //else n--;
       //RCLCPP_INFO(this->get_logger(), "Creating MSI");
       moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
 
     planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
     mpr.planner_id = "PTP";
+    mpr.group_name = move_group.getName();
+    mpr.max_velocity_scaling_factor = 1.0;
+    mpr.max_acceleration_scaling_factor = 1.0;
     mpr.allowed_planning_time = 100;
     mpr.max_cartesian_speed = 1; // m/s
     //mpr.goal_constraints.position_constraints.header.frame_id = "world";
@@ -394,21 +400,18 @@ public:
     //RCLCPP_INFO(this->get_logger(), "Got ee_link");
 
 
-    mpr.group_name = MOVE_GROUP;
     //moveit_msgs::msg::Constraints pose_goal =
     //  kinematic_constraints::constructGoalConstraints(ee_link, p, tolerance_pose, tolerance_angle);
       //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
     moveit_msgs::msg::Constraints pose_goal =
-      kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
+      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-6, 1e-6);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
 
     mpr.goal_constraints.push_back(pose_goal);
-    mpr.max_velocity_scaling_factor = 1.0;
-    mpr.max_acceleration_scaling_factor = 1.0;
 
       msi.req = mpr;
-      msi.blend_radius = 0.001; //TODO make configurable
+      msi.blend_radius = 0.0001; //TODO make configurable
       msr.items.push_back(msi);
     }
     msr.items.back().blend_radius = 0.0; // Last element blend must be 0
@@ -429,6 +432,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
     auto res = sequence_client_->async_send_request(req);
     // Wait for the result.
+    RCLCPP_INFO(this->get_logger(), "Waiting for result");
     res.wait();
     try
     {
