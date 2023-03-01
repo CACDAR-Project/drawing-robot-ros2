@@ -75,7 +75,7 @@ public:
 
   // Set limits for A4 paper
   // 297x210
-  float xlim_lower = 0.10;
+  float xlim_lower = 0.20;
   float xlim_upper = 0.25;
   float ylim_lower = -0.10;
   float ylim_upper = 0.115;
@@ -375,17 +375,19 @@ public:
     long n = 0;
     for (auto p : goal->motion.path)
     {
+      // skip first
       //if (n <= 0) continue;
-      //else n--;
+      //n--;
+
       //RCLCPP_INFO(this->get_logger(), "Creating MSI");
       moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
 
     planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
     mpr.planner_id = "PTP";
     mpr.group_name = move_group.getName();
-    mpr.max_velocity_scaling_factor = 1.0;
-    mpr.max_acceleration_scaling_factor = 1.0;
-    mpr.allowed_planning_time = 100;
+    mpr.max_velocity_scaling_factor = 0.5;
+    mpr.max_acceleration_scaling_factor = 0.5;
+    mpr.allowed_planning_time = 10;
     mpr.max_cartesian_speed = 1; // m/s
     //mpr.goal_constraints.position_constraints.header.frame_id = "world";
 
@@ -403,15 +405,20 @@ public:
     //moveit_msgs::msg::Constraints pose_goal =
     //  kinematic_constraints::constructGoalConstraints(ee_link, p, tolerance_pose, tolerance_angle);
       //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
+
+    geometry_msgs::msg::PointStamped point;
+    auto position = translatePose(p).pose.position;
+    point.point = position;
     moveit_msgs::msg::Constraints pose_goal =
-      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-6, 1e-6);
+      //kinematic_constraints::constructGoalConstraints(ee_link, point, 1e-5);
+      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-5, 1e-2);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
 
     mpr.goal_constraints.push_back(pose_goal);
 
       msi.req = mpr;
-      msi.blend_radius = 0.0001; //TODO make configurable
+      msi.blend_radius = 0.00000001; //TODO make configurable
       msr.items.push_back(msi);
     }
     msr.items.back().blend_radius = 0.0; // Last element blend must be 0
@@ -433,21 +440,35 @@ public:
     auto res = sequence_client_->async_send_request(req);
     // Wait for the result.
     RCLCPP_INFO(this->get_logger(), "Waiting for result");
-    res.wait();
-    try
+    auto status = res.wait_for(30s);
+    if (status == std::future_status::ready)
     {
-      for (auto t : res.get()->response.planned_trajectories)
+      auto ts = res.get()->response.planned_trajectories;
+      RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
+      if (ts.size() > 0)
       {
-        // TODO
-        //trajectory->append(t, 0.0001, 0);
-        RCLCPP_INFO(this->get_logger(), "Executing trajectory of length: %ld", t.joint_trajectory.points.size());
-        this->move_group.execute(t);
+        RCLCPP_INFO(this->get_logger(), "Executing result");
+        move_group.execute(ts[0]);
       }
     }
-    catch(const std::exception& e)
+    else
     {
-      RCLCPP_ERROR(this->get_logger(), "Failed to call motion sequence service");
+      RCLCPP_ERROR(this->get_logger(), "Planner failed to return trajectory in time");
     }
+    //for (auto t : res.get()->response.planned_trajectories)
+    //{
+    //  // TODO
+    //  //trajectory->append(t, 0.0001, 0);
+    //  RCLCPP_INFO(this->get_logger(), "Executing trajectory of length: %ld", t.joint_trajectory.points.size());
+    //  this->move_group.execute(t);
+    //}
+    //try
+    //{
+    //}
+    //catch(const std::exception& e)
+    //{
+    //  RCLCPP_ERROR(this->get_logger(), "Failed to call motion sequence service");
+    //}
     //if (plan_success)
     //{
     //  //trajectory.setRobotTrajectoryMsg(*move_group_state, trajectory_msg);
