@@ -153,6 +153,14 @@ def launch_setup(context, *args, **kwargs):
     controllers_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, '{}.yaml'.format(controllers_name.perform(context)))
     ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
+
+    #kinematics_yaml['kinematics_solver'] = 'kdl_kinematics_plugin/KDLKinematicsPlugin'
+    #kinematics_yaml['kinematics_solver_search_resolution'] = 0.005
+    #kinematics_yaml['kinematics_solver_timeout'] = 0.005
+    #kinematics_yaml['kinematics_solver_attempts'] = 3
+    kinematics_yaml['kinematics_solver_timeout'] = 10.0
+    kinematics_yaml['kinematics_solver_attempts'] = 10
+
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
     if add_gripper.perform(context) in ('True', 'true'):

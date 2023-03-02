@@ -304,6 +304,12 @@ def launch_setup(context, *args, **kwargs):
         joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
         joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 0.5
 
+    kinematics_yaml['kinematics_solver'] = 'kdl_kinematics_plugin/KDLKinematicsPlugin'
+    #kinematics_yaml['kinematics_solver'] = 'lma_kinematics_plugin/LMAKinematicsPlugin'
+    #kinematics_yaml['kinematics_solver_search_resolution'] = 0.005
+    kinematics_yaml['kinematics_solver_timeout'] = 10.0
+    kinematics_yaml['kinematics_solver_attempts'] = 10
+
     #print(joint_limits_yaml)
     #quit()
 
@@ -422,6 +428,7 @@ def launch_setup(context, *args, **kwargs):
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
+        arguments=['--log-level', 'debug'],
         parameters=[
             robot_description_parameters,
             #ompl_planning_pipeline_config,
