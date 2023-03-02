@@ -201,7 +201,7 @@ class SVGProcessor():
                                       (getnum(),getnum()),
                                       (getnum(),getnum())]
                     control_points = np.array(control_points)
-                    n = 10
+                    n = 50
                     curve = cf.cubic_curve(control_points)
                     lin = np.linspace(curve.start(0), curve.end(0), n)
                     coordinates = curve(lin)
@@ -222,7 +222,7 @@ class SVGProcessor():
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum())]
                     control_points = np.array(control_points)
-                    n = 10
+                    n = 50
                     curve = cf.cubic_curve(control_points)
                     lin = np.linspace(curve.start(0), curve.end(0), n)
                     coordinates = curve(lin)
