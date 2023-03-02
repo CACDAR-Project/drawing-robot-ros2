@@ -343,16 +343,17 @@ class SVGProcessor():
         tolerance = 0.001
         prev = (-1, -1, 0)
         for i, p in enumerate(motion):
-            next = motion[(i + 1) % len(motion)]
-            if (p[2] <= 0):
-                x = p[0]
-                y = p[1]
-                px = prev[0]
-                py = prev[1]
-                xdiff = abs(x - px)
-                ydiff = abs(y - py)
-                if xdiff < tolerance and ydiff < tolerance and next[2] <= 0:
-                    continue
+            x = p[0]
+            y = p[1]
+            z = p[2]
+            px = prev[0]
+            py = prev[1]
+            pz = prev[2]
+            xdiff = abs(x - px)
+            ydiff = abs(y - py)
+            zdiff = abs(z - pz)
+            if xdiff < tolerance and ydiff < tolerance and zdiff < tolerance:
+                continue
             prev = p
             mm.append(p)
         return mm
