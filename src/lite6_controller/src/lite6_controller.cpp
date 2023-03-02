@@ -4,6 +4,9 @@
 #include <chrono>
 //#include <queue>
 
+#include <fstream>
+#include <iostream>
+
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <moveit_msgs/msg/collision_object.hpp>
@@ -75,18 +78,12 @@ public:
 
   // Set limits for A4 paper
   // 297x210
-  //float xlim_lower = 0.30;
-  //float xlim_upper = 0.305;
-  //float ylim_lower = -0.02;
-  //float ylim_upper = 0.00;
-  //float zlim_lower = 0.25;
-  //float zlim_upper = 0.255;
-  float xlim_lower = 0.20;
-  float xlim_upper = 0.25;
-  float ylim_lower = -0.05;
-  float ylim_upper = 0.05;
-  float zlim_lower = 0.157;
-  float zlim_upper = 0.17;
+  float xlim_lower = 0.10;
+  float xlim_upper = 0.30;
+  float ylim_lower = -0.14;
+  float ylim_upper = 0.14;
+  float zlim_lower = 0.19;
+  float zlim_upper = 0.21;
 
   //bool moved = false;
   //
@@ -191,6 +188,169 @@ public:
   }
 
   /**
+   *
+   */
+  moveit_msgs::msg::MotionSequenceRequest createMotionSequenceRequest(const std::vector<geometry_msgs::msg::PoseStamped> *path)
+  {
+    moveit_msgs::msg::MotionSequenceRequest msr = moveit_msgs::msg::MotionSequenceRequest();
+    //waypoints.push_back(move_group.getCurrentPose().pose);
+    std::string ee_link = move_group.getLinkNames().back();
+    RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
+    for (auto p : *path)
+    {
+      //RCLCPP_INFO(this->get_logger(), "Creating MSI");
+      moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
+
+      planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
+      mpr.planner_id = "PTP";
+      mpr.group_name = move_group.getName();
+      mpr.max_velocity_scaling_factor = 0.5;
+      mpr.max_acceleration_scaling_factor = 0.5;
+      mpr.allowed_planning_time = 10;
+      mpr.max_cartesian_speed = 1; // m/s
+      //mpr.goal_constraints.position_constraints.header.frame_id = "world";
+
+      // A tolerance of 0.01 m is specified in position
+      // and 0.01 radians in orientation
+      std::vector<double> tolerance_pose(3, 0.01);
+      std::vector<double> tolerance_angle(3, 0.01);
+
+
+      // Set motion goal of end effector link
+      //std::string ee_link = moveit_cpp_->getRobotModel()->getJointModelGroup(planning_component_->getPlanningGroupName())->getLinkModelNames().back();
+      //RCLCPP_INFO(this->get_logger(), "Got ee_link");
+
+
+      //moveit_msgs::msg::Constraints pose_goal =
+      //  kinematic_constraints::constructGoalConstraints(ee_link, p, tolerance_pose, tolerance_angle);
+      //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
+
+      geometry_msgs::msg::PointStamped point;
+      auto position = translatePose(p).pose.position;
+      point.point = position;
+      moveit_msgs::msg::Constraints pose_goal =
+      //kinematic_constraints::constructGoalConstraints(ee_link, point, 1e-5);
+      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-3, 1e-2);
+      //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
+      //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
+
+      mpr.goal_constraints.push_back(pose_goal);
+
+      msi.req = mpr;
+      msi.blend_radius = 0.0; //TODO make configurable
+      //msi.blend_radius = 0.000000001; //TODO make configurable
+      msr.items.push_back(msi);
+    }
+    msr.items.back().blend_radius = 0.0; // Last element blend must be 0
+    moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
+    moveit_msgs::msg::RobotState state_msg;
+    moveit::core::robotStateToRobotStateMsg(*move_group_state, state_msg);
+    msr.items.front().req.start_state = state_msg;
+    return msr;
+  }
+
+  /**
+   *
+   */
+  moveit_msgs::msg::MotionSequenceRequest createMotionSequenceRequest(const std::vector<geometry_msgs::msg::PoseStamped> *path, double x_offset, double y_offset, double z_offset)
+  {
+    this->xlim_lower += x_offset;
+    this->xlim_upper += x_offset;
+    this->ylim_lower += y_offset;
+    this->ylim_upper += y_offset;
+    this->zlim_lower += z_offset;
+    this->zlim_upper += z_offset;
+    moveit_msgs::msg::MotionSequenceRequest msr = createMotionSequenceRequest(path);
+    this->xlim_lower -= x_offset;
+    this->xlim_upper -= x_offset;
+    this->ylim_lower -= y_offset;
+    this->ylim_upper -= y_offset;
+    this->zlim_lower -= z_offset;
+    this->zlim_upper -= z_offset;
+    return msr;
+  }
+
+  /**
+   *
+   */
+  static void appendLineToFile(std::string filepath, std::string line)
+  {
+    std::ofstream file;
+    file.open(filepath, std::ios::out | std::ios::app);
+    if (file.fail())
+        throw std::ios_base::failure(std::strerror(errno));
+
+    file.exceptions(file.exceptions() | std::ios::failbit | std::ifstream::badbit);
+
+    file << line << std::endl;
+  }
+
+  /**
+   *
+   */
+  std::string pointsToString(const std::vector<geometry_msgs::msg::PoseStamped> *path, double x_offset, double y_offset, double z_offset)
+  {
+    std::string out = "";
+    this->xlim_lower += x_offset;
+    this->xlim_upper += x_offset;
+    this->ylim_lower += y_offset;
+    this->ylim_upper += y_offset;
+    this->zlim_lower += z_offset;
+    this->zlim_upper += z_offset;
+    for (auto p : *path)
+    {
+      auto position = translatePose(p).pose.position;
+      out = out + std::to_string(position.x) + " " +
+                  std::to_string(position.y) + " " +
+                  std::to_string(position.z) + ",";
+    }
+    out = out.substr(0, out.size()-1); //remove trailing comma
+    this->xlim_lower -= x_offset;
+    this->xlim_upper -= x_offset;
+    this->ylim_lower -= y_offset;
+    this->ylim_upper -= y_offset;
+    this->zlim_lower -= z_offset;
+    this->zlim_upper -= z_offset;
+    return out;
+  }
+
+  /**
+   * Tests path with offsets in multiple locations and logs them to OUTPUT.csv
+   */
+  void planAndLogOffset(const std::vector<geometry_msgs::msg::PoseStamped> *path)
+  {
+    double res = 0.05;
+    double bot = -0.5;
+    double top = 0.5;
+    for (double x = bot; x <= top; x+=res)
+    {
+      for (double y = bot; y <= top; y+=res)
+      {
+        for (double z = bot; z <= top; z+=res)
+        {
+          auto msr = createMotionSequenceRequest(path, x, y, z);
+          auto req = std::make_shared<moveit_msgs::srv::GetMotionSequence::Request>();
+          req->request = msr;
+          auto res = sequence_client_->async_send_request(req);
+          auto ts = res.get()->response.planned_trajectories;
+          //RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
+          std::string status = "";
+          if (ts.size() > 0)
+          {
+            status = "success";
+          }
+          else
+          {
+            status = "failure";
+          }
+          status = status + "," + pointsToString(path,x,y,z);
+          appendLineToFile("OUTPUT.csv", status);
+        }
+      }
+    }
+  }
+
+  /**
    * Callback that executes path on robot
    */
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
@@ -202,113 +362,46 @@ public:
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();
 
-    // getting current state of robot from environment
-    //if (!moveit_cpp_->getPlanningSceneMonitor()->requestPlanningSceneState())
-    //{
-    //  RCLCPP_ERROR(this->get_logger(), "Failed to get planning scene");
-    //  return;
-    //}
-    //moveit::core::RobotStatePtr start_robot_state = moveit_cpp_->getCurrentState(2.0);
-
-    moveit_msgs::msg::MotionSequenceRequest msr = moveit_msgs::msg::MotionSequenceRequest();
-    //waypoints.push_back(move_group.getCurrentPose().pose);
-    std::string ee_link = move_group.getLinkNames().back();
-    RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
-    long n = 0;
-    for (auto p : goal->motion.path)
-    {
-      // skip first
-      //if (n <= 0) continue;
-      //n--;
-
-      //RCLCPP_INFO(this->get_logger(), "Creating MSI");
-      moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
-
-    planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
-    mpr.planner_id = "PTP";
-    mpr.group_name = move_group.getName();
-    mpr.max_velocity_scaling_factor = 0.5;
-    mpr.max_acceleration_scaling_factor = 0.5;
-    mpr.allowed_planning_time = 10;
-    mpr.max_cartesian_speed = 1; // m/s
-    //mpr.goal_constraints.position_constraints.header.frame_id = "world";
-
-    // A tolerance of 0.01 m is specified in position
-    // and 0.01 radians in orientation
-    std::vector<double> tolerance_pose(3, 0.01);
-    std::vector<double> tolerance_angle(3, 0.01);
-
-
-    // Set motion goal of end effector link
-    //std::string ee_link = moveit_cpp_->getRobotModel()->getJointModelGroup(planning_component_->getPlanningGroupName())->getLinkModelNames().back();
-    //RCLCPP_INFO(this->get_logger(), "Got ee_link");
-
-
-    //moveit_msgs::msg::Constraints pose_goal =
-    //  kinematic_constraints::constructGoalConstraints(ee_link, p, tolerance_pose, tolerance_angle);
-      //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
-
-    geometry_msgs::msg::PointStamped point;
-    auto position = translatePose(p).pose.position;
-    point.point = position;
-    moveit_msgs::msg::Constraints pose_goal =
-      //kinematic_constraints::constructGoalConstraints(ee_link, point, 1e-5);
-      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-3, 1e-2);
-      //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
-      //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
-
-    mpr.goal_constraints.push_back(pose_goal);
-
-      msi.req = mpr;
-      msi.blend_radius = 0.000000001; //TODO make configurable
-      msr.items.push_back(msi);
-    }
-    msr.items.back().blend_radius = 0.0; // Last element blend must be 0
-    moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
-    moveit_msgs::msg::RobotState state_msg;
-    moveit::core::robotStateToRobotStateMsg(*move_group_state, state_msg);
-    msr.items.front().req.start_state = state_msg;
+    auto msr = createMotionSequenceRequest(&goal->motion.path);
     RCLCPP_INFO(this->get_logger(), "Created MSR");
 
-    //moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
-    //robot_trajectory::RobotTrajectory trajectory(move_group_state.move_group.getName());
-    //moveit_msgs::msg::RobotTrajectory *trajectory_msg;
-    //sendMSR(msr);
+    //planAndLogOffset(&goal->motion.path);
+
     RCLCPP_INFO(this->get_logger(), "Creating req");
     auto req = std::make_shared<moveit_msgs::srv::GetMotionSequence::Request>();
     RCLCPP_INFO(this->get_logger(), "Setting msr request");
     req->request = msr;
     RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
     auto res = sequence_client_->async_send_request(req);
-    // Wait for the result.
     RCLCPP_INFO(this->get_logger(), "Waiting for result");
-    auto status = res.wait_for(30s);
-    if (status == std::future_status::ready)
+    auto ts = res.get()->response.planned_trajectories;
+    std::string status = "";
+    if (ts.size() > 0)
     {
-      auto ts = res.get()->response.planned_trajectories;
+      status = "success";
       RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
-      if (ts.size() > 0)
-      {
-        RCLCPP_INFO(this->get_logger(), "Executing result");
-        move_group.execute(ts[0]);
+      RCLCPP_INFO(this->get_logger(), "Executing result");
+      move_group.execute(ts[0]);
 
-        // Check if goal is done
-        if (rclcpp::ok()) {
-          result->result = "success";
-          goal_handle->succeed(result);
-          RCLCPP_INFO(this->get_logger(), "Goal succeeded");
-          return;
-        }
-      }
+      status = status + "," + pointsToString(&goal->motion.path,0,0,0);
+      //appendLineToFile("OUTPUT.csv", status);
+
+      result->result = "success";
+      goal_handle->succeed(result);
+      RCLCPP_INFO(this->get_logger(), "Goal succeeded");
+      return;
     }
-    else
-    {
-      RCLCPP_ERROR(this->get_logger(), "Planner failed to return trajectory in time");
-    }
+
+    status = "failure";
+    status = status + "," + pointsToString(&goal->motion.path,0,0,0);
+    //appendLineToFile("OUTPUT.csv", status);
+
+    RCLCPP_ERROR(this->get_logger(), "Planner failed to return trajectory in time");
     result->result = "failure";
     goal_handle->succeed(result);
     // abort prevents action from being called
     //goal_handle->abort(result);
+
     RCLCPP_ERROR(this->get_logger(), "Goal failed");
   }
 };
