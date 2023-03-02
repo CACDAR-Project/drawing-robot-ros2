@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 # Converts ROS2 log data timestamps from stdin to more readable format
+# Reads lines from stdin, pipe input to this script
 
 
 while IFS= read -r string; do

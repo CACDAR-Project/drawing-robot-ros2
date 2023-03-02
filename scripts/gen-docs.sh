@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+# generates docs
+
+pushd ..
 
 pushd src/robot_controller/
 doxygen
@@ -13,3 +16,5 @@ doxygen
 popd
 
 make html
+
+
