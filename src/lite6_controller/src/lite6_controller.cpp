@@ -75,10 +75,16 @@ public:
 
   // Set limits for A4 paper
   // 297x210
+  //float xlim_lower = 0.30;
+  //float xlim_upper = 0.305;
+  //float ylim_lower = -0.02;
+  //float ylim_upper = 0.00;
+  //float zlim_lower = 0.25;
+  //float zlim_upper = 0.255;
   float xlim_lower = 0.20;
   float xlim_upper = 0.25;
-  float ylim_lower = -0.10;
-  float ylim_upper = 0.115;
+  float ylim_lower = -0.05;
+  float ylim_upper = 0.05;
   float zlim_lower = 0.157;
   float zlim_upper = 0.17;
 
@@ -151,49 +157,6 @@ public:
 
   }
 
-  /**
-   * This function takes a pose and returns a MotionPlanRequest
-   */
-  planning_interface::MotionPlanRequest createRequest(geometry_msgs::msg::PoseStamped pose)
-  {
-    planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
-    mpr.planner_id = "PTP";
-    //mpr.goal_constraints.position_constraints.header.frame_id = "world";
-
-    // A tolerance of 0.01 m is specified in position
-    // and 0.01 radians in orientation
-    std::vector<double> tolerance_pose(3, 0.01);
-    std::vector<double> tolerance_angle(3, 0.01);
-
-
-    // Set motion goal of end effector link
-    //std::string ee_link = moveit_cpp_->getRobotModel()->getJointModelGroup(planning_component_->getPlanningGroupName())->getLinkModelNames().back();
-    //RCLCPP_INFO(this->get_logger(), "Got ee_link");
-
-    mpr.group_name = MOVE_GROUP;
-    moveit_msgs::msg::Constraints pose_goal =
-      kinematic_constraints::constructGoalConstraints("link_eef", pose, tolerance_pose, tolerance_angle);
-      //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
-
-    mpr.goal_constraints.push_back(pose_goal);
-    return mpr;
-  }
-
-  // TODO implement time param
-  // https://moveit.picknik.ai/foxy/doc/move_group_interface/move_group_interface_tutorial.html
-  // https://groups.google.com/g/moveit-users/c/MOoFxy2exT4
-  // https://docs.ros.org/en/noetic/api/moveit_msgs/html/msg/RobotTrajectory.html
-
-  // TODO implement feedback
-  // https://answers.ros.org/question/249995/how-to-check-sate-of-plan-execution-in-moveit-during-async-execution-in-python/
-  //
-  // Useful
-  // https://groups.google.com/g/moveit-users/c/I4sPhq_JGQk
-  // https://groups.google.com/g/moveit-users/c/MOoFxy2exT4/m/0AwRHOuEwRgJ
-  // https://discourse.ros.org/t/moveit-trajectory-through-waypoints/17439
-  // https://answers.ros.org/question/330632/moveit-motion-planning-how-should-i-splice-several-planned-motion-trajectories/
-  // https://groups.google.com/g/moveit-users/c/lZL2HTjLu-k
-  //
 
   /**
    * Function that translates an input value with a given range to a value within another range.
@@ -225,127 +188,6 @@ public:
     pose.pose.position.z = translate(pose.pose.position.z, 0, 1, zlim_lower, zlim_upper);
 
     return pose;
-  }
-
-  void logPose(geometry_msgs::msg::PoseStamped pose)
-  {
-    RCLCPP_INFO(this->get_logger(), "pose position.x: %f", pose.pose.position.x);
-    RCLCPP_INFO(this->get_logger(), "pose position.y: %f", pose.pose.position.y);
-    RCLCPP_INFO(this->get_logger(), "pose position.z: %f", pose.pose.position.z);
-  }
-
-  /**
-   * Creates a trajectory for a pose and appends it to a given trajectory
-   */
-  bool addPoseToTrajectory(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory, moveit::core::RobotStatePtr state)
-  {
-    pose = translatePose(pose);
-    move_group.setPoseTarget(pose);
-    //move_group.setApproximateJointValueTarget(pose, "link_eef");
-
-    //moveit_msgs::msg::RobotTrajectory trajectory;
-    //move_group.setPlanningPipelineId("PTP");
-    move_group.setPlannerId("PTP");
-
-    robot_trajectory::RobotTrajectory previous_trajectory(state->getRobotModel(), move_group.getName());
-    previous_trajectory.setRobotTrajectoryMsg(*state, *trajectory);
-
-
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
-    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED, trying approximate method (if enabled)");
-
-    if (success)
-    {
-      robot_trajectory::RobotTrajectory next_trajectory(state->getRobotModel(), move_group.getName());
-      next_trajectory.setRobotTrajectoryMsg(*state, plan.trajectory_);
-
-      // append trajectory, with time step of 2.0, not skipping any points
-      previous_trajectory.append(next_trajectory, 0.000001, 0);
-      *trajectory = moveit_msgs::msg::RobotTrajectory();
-      previous_trajectory.getRobotTrajectoryMsg(*trajectory);
-
-      // Append segment to complete trajectory
-      //trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
-      //                                    plan.trajectory_.joint_trajectory.points.begin(),
-      //                                    plan.trajectory_.joint_trajectory.points.end());
-      //trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
-
-    }
-    else
-    {
-      // Unsafe approximate solution
-      // Likely to break pens
-      //success = addPoseToTrajectoryApproximate(pose, trajectory);
-    }
-    move_group.clearPoseTarget();
-    return success;
-  }
-
-  /**
-   * Creates a trajectory for a pose and appends it to a given trajectory
-   */
-  bool addPoseToTrajectoryApproximate(geometry_msgs::msg::PoseStamped pose, moveit_msgs::msg::RobotTrajectory *trajectory)
-  {
-    pose = translatePose(pose);
-    move_group.setApproximateJointValueTarget(pose, "link_eef");
-    move_group.setPlannerId("PTP");
-
-    robot_trajectory::RobotTrajectory previous_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-    previous_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), *trajectory);
-
-
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool success = (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
-    RCLCPP_INFO(this->get_logger(), "Plan (pose goal) %s", success ? "SUCCEEDED" : "FAILED");
-
-    if (success)
-    {
-      robot_trajectory::RobotTrajectory next_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-      next_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), plan.trajectory_);
-
-      // append trajectory, with time step of 2.0, not skipping any points
-      previous_trajectory.append(next_trajectory, 0.0001, 0);
-      *trajectory = moveit_msgs::msg::RobotTrajectory();
-      previous_trajectory.getRobotTrajectoryMsg(*trajectory);
-
-      // Append segment to complete trajectory
-      //trajectory->joint_trajectory.points.insert(trajectory->joint_trajectory.points.end(),
-      //                                    plan.trajectory_.joint_trajectory.points.begin(),
-      //                                    plan.trajectory_.joint_trajectory.points.end());
-      //trajectory->joint_trajectory.joint_names = plan.trajectory_.joint_trajectory.joint_names;
-
-    }
-    move_group.clearPoseTarget();
-    return success;
-  }
-
-  bool sendMSR(moveit_msgs::msg::MotionSequenceRequest msr)
-  {
-    RCLCPP_INFO(this->get_logger(), "Creating req");
-    auto req = rclcpp::Client<moveit_msgs::srv::GetMotionSequence>::SharedRequest();
-    RCLCPP_INFO(this->get_logger(), "Setting msr request");
-    req->request = msr;
-    RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
-    auto result = sequence_client_->async_send_request(req);
-    // Wait for the result.
-    if (rclcpp::spin_until_future_complete(this->shared_from_this(), result) ==
-        rclcpp::FutureReturnCode::SUCCESS)
-    {
-      //RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sum: %ld", result.get()->sum);
-      //trajectory = result.get()->response->trajectory;
-      for (auto t : result.get()->response.planned_trajectories)
-      {
-        // TODO
-        //trajectory->append(t, 0.0001, 0);
-        RCLCPP_INFO(this->get_logger(), "Executing trajectory of length: %ld", t.joint_trajectory.points.size());
-        this->move_group.execute(t);
-      }
-      return true;
-    } else {
-      RCLCPP_ERROR(this->get_logger(), "Failed to call motion sequence service");
-      return false;
-    }
   }
 
   /**
@@ -411,14 +253,14 @@ public:
     point.point = position;
     moveit_msgs::msg::Constraints pose_goal =
       //kinematic_constraints::constructGoalConstraints(ee_link, point, 1e-5);
-      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-5, 1e-2);
+      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-3, 1e-2);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
 
     mpr.goal_constraints.push_back(pose_goal);
 
       msi.req = mpr;
-      msi.blend_radius = 0.00000001; //TODO make configurable
+      msi.blend_radius = 0.000000001; //TODO make configurable
       msr.items.push_back(msi);
     }
     msr.items.back().blend_radius = 0.0; // Last element blend must be 0
@@ -449,101 +291,25 @@ public:
       {
         RCLCPP_INFO(this->get_logger(), "Executing result");
         move_group.execute(ts[0]);
+
+        // Check if goal is done
+        if (rclcpp::ok()) {
+          result->result = "success";
+          goal_handle->succeed(result);
+          RCLCPP_INFO(this->get_logger(), "Goal succeeded");
+          return;
+        }
       }
     }
     else
     {
       RCLCPP_ERROR(this->get_logger(), "Planner failed to return trajectory in time");
     }
-    //for (auto t : res.get()->response.planned_trajectories)
-    //{
-    //  // TODO
-    //  //trajectory->append(t, 0.0001, 0);
-    //  RCLCPP_INFO(this->get_logger(), "Executing trajectory of length: %ld", t.joint_trajectory.points.size());
-    //  this->move_group.execute(t);
-    //}
-    //try
-    //{
-    //}
-    //catch(const std::exception& e)
-    //{
-    //  RCLCPP_ERROR(this->get_logger(), "Failed to call motion sequence service");
-    //}
-    //if (plan_success)
-    //{
-    //  //trajectory.setRobotTrajectoryMsg(*move_group_state, trajectory_msg);
-    //  RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", trajectory_msg->joint_trajectory.points.size());
-    //  this->move_group.execute(*trajectory_msg);
-    //}
-    //else
-    //{
-    //  RCLCPP_ERROR(this->get_logger(), "Motion sequence planning failed, not executing");
-    //}
-
-
-    //moveit_msgs::msg::RobotTrajectory multi_trajectory;
-    ////robot_trajectory::RobotTrajectory rt(move_group.getRobotModel(), MOVE_GROUP);
-    //robot_trajectory::RobotTrajectory single_trajectory(move_group.getCurrentState()->getRobotModel(), move_group.getName());
-
-    //move_group.setStartStateToCurrentState();
-    //moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
-    //for (auto p : goal->motion.path)
-    //{
-    //  //RCLCPP_INFO(this->get_logger(), "Planning trajectory");
-
-    //  // Append next pose to trajectory
-    //  if (!addPoseToTrajectory(p, &multi_trajectory, move_group_state)) continue;
-
-    //  // set move_group start state to final pose of trajectory
-    //  //RCLCPP_INFO(this->get_logger(), "setRobotTrajectoryMsg");
-    //  single_trajectory.setRobotTrajectoryMsg(*move_group_state, multi_trajectory);
-    //  //rt.setRobotTrajectoryMsg(rt.getLastWayPoint(), trajectory);
-    //  //RCLCPP_INFO(this->get_logger(), "getLastWayPoint");
-    //  //
-    //  //moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
-    //  moveit::core::RobotState robot_state = single_trajectory.getLastWayPoint();
-    //  //RCLCPP_INFO(this->get_logger(), "eef");
-    //  //const Eigen::Isometry3d& eef_transform = robot_state.getGlobalLinkTransform(move_group.getEndEffectorLink());
-    //  //geometry_msgs::msg::Pose pose;
-    //  //pose = Eigen::toMsg(eef_transform);
-    //  move_group.setStartState(robot_state);
-
-
-    //  //trajectory = moveit_msgs::msg::RobotTrajectory();
-    //}
-
-    //RCLCPP_INFO(this->get_logger(), "Executing trajectory with %ld points", multi_trajectory.joint_trajectory.points.size());
-    //this->move_group.execute(multi_trajectory);
-
-    //double fraction = this->move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-    //RCLCPP_INFO(this->get_logger(), "Visualizing plan 4 (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
-
-
-    //waypoints.clear();
-
-    //for (int i = 1; (i <= 10) && rclcpp::ok(); ++i) {
-    //  // Check if there is a cancel request
-    //  if (goal_handle->is_canceling()) {
-    //    result->result = feedback->status;
-    //    goal_handle->canceled(result);
-    //    RCLCPP_INFO(this->get_logger(), "Goal canceled");
-    //    return;
-    //  }
-    //  // Update status
-    //  feedback->status = std::to_string(i) + "/10 complete";
-    //  // Publish feedback
-    //  goal_handle->publish_feedback(feedback);
-    //  RCLCPP_INFO(this->get_logger(), feedback->status.c_str());
-
-    //  loop_rate.sleep();
-    //}
-
-    // Check if goal is done
-    if (rclcpp::ok()) {
-      result->result = "success";
-      goal_handle->succeed(result);
-      RCLCPP_INFO(this->get_logger(), "Goal succeeded");
-    }
+    result->result = "failure";
+    goal_handle->succeed(result);
+    // abort prevents action from being called
+    //goal_handle->abort(result);
+    RCLCPP_ERROR(this->get_logger(), "Goal failed");
   }
 };
 
