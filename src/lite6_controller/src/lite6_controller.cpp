@@ -384,7 +384,7 @@ public:
       move_group.execute(ts[0]);
 
       status = status + "," + pointsToString(&goal->motion.path,0,0,0);
-      //appendLineToFile("OUTPUT.csv", status);
+      appendLineToFile("OUTPUT.csv", status);
 
       result->result = "success";
       goal_handle->succeed(result);
@@ -394,7 +394,7 @@ public:
 
     status = "failure";
     status = status + "," + pointsToString(&goal->motion.path,0,0,0);
-    //appendLineToFile("OUTPUT.csv", status);
+    appendLineToFile("OUTPUT.csv", status);
 
     RCLCPP_ERROR(this->get_logger(), "Planner failed to return trajectory in time");
     result->result = "failure";
