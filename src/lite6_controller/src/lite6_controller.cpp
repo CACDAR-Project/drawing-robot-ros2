@@ -2,6 +2,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <robot_controller/robot_controller.hpp>
 #include <chrono>
+#include <cstdlib>
 //#include <queue>
 
 #include <fstream>
@@ -188,6 +189,17 @@ public:
   }
 
   /**
+   * Checks if points are within a radius of eachother, specified by the tolerance argument
+   */
+  bool coincidentPoints(geometry_msgs::msg::Point *p1, geometry_msgs::msg::Point *p2, double tolerance)
+  {
+    bool x = std::abs(p1->x - p2->x) <= tolerance;
+    bool y = std::abs(p1->y - p2->y) <= tolerance;
+    bool z = std::abs(p1->z - p2->z) <= tolerance;
+    return x && y && z;
+  }
+
+  /**
    *
    */
   moveit_msgs::msg::MotionSequenceRequest createMotionSequenceRequest(const std::vector<geometry_msgs::msg::PoseStamped> *path)
@@ -196,6 +208,10 @@ public:
     //waypoints.push_back(move_group.getCurrentPose().pose);
     std::string ee_link = move_group.getLinkNames().back();
     RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
+    geometry_msgs::msg::Point previous_point;
+    //previous_point.point.x = -1.0;
+    //previous_point.point.y = -1.0;
+    //previous_point.point.z = -1.0;
     for (auto p : *path)
     {
       //RCLCPP_INFO(this->get_logger(), "Creating MSI");
@@ -204,41 +220,51 @@ public:
       planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
       mpr.planner_id = "PTP";
       mpr.group_name = move_group.getName();
-      mpr.max_velocity_scaling_factor = 0.5;
-      mpr.max_acceleration_scaling_factor = 0.5;
+      mpr.max_velocity_scaling_factor = 1.0;
+      mpr.max_acceleration_scaling_factor = 1.0;
       mpr.allowed_planning_time = 10;
-      mpr.max_cartesian_speed = 1; // m/s
+      mpr.max_cartesian_speed = 2; // m/s
       //mpr.goal_constraints.position_constraints.header.frame_id = "world";
 
       // A tolerance of 0.01 m is specified in position
       // and 0.01 radians in orientation
-      std::vector<double> tolerance_pose(3, 0.01);
-      std::vector<double> tolerance_angle(3, 0.01);
+      //std::vector<double> tolerance_pose(3, 0.01);
+      //std::vector<double> tolerance_angle(3, 0.01);
 
 
       // Set motion goal of end effector link
       //std::string ee_link = moveit_cpp_->getRobotModel()->getJointModelGroup(planning_component_->getPlanningGroupName())->getLinkModelNames().back();
-      //RCLCPP_INFO(this->get_logger(), "Got ee_link");
 
 
       //moveit_msgs::msg::Constraints pose_goal =
       //  kinematic_constraints::constructGoalConstraints(ee_link, p, tolerance_pose, tolerance_angle);
       //kinematic_constraints::constructGoalConstraints(ee_link, pose, tolerance_pose, tolerance_angle);
 
-      geometry_msgs::msg::PointStamped point;
-      auto position = translatePose(p).pose.position;
-      point.point = position;
+      //geometry_msgs::msg::PointStamped point;
+      geometry_msgs::msg::Point point;
+      auto pose = translatePose(p);
       moveit_msgs::msg::Constraints pose_goal =
+        kinematic_constraints::constructGoalConstraints(ee_link, pose, 1e-3, 1e-2);
       //kinematic_constraints::constructGoalConstraints(ee_link, point, 1e-5);
-      kinematic_constraints::constructGoalConstraints(ee_link, translatePose(p), 1e-3, 1e-2);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1.0, 1.0);
       //kinematic_constraints::constructGoalConstraints(ee_link, p, 1e-3, 1e-2);
 
       mpr.goal_constraints.push_back(pose_goal);
 
       msi.req = mpr;
-      msi.blend_radius = 0.0; //TODO make configurable
-      //msi.blend_radius = 0.000000001; //TODO make configurable
+      //msi.blend_radius = 0.0; //TODO make configurable
+      msi.blend_radius = 1e-15; //TODO make configurable
+      if (coincidentPoints(&pose.pose.position, &previous_point, msi.blend_radius * 1e12))
+      {
+        RCLCPP_INFO(this->get_logger(), "Detected coincident points, setting blend radius to 0.0");
+        // if points are too close, set blend radius to zero.
+        msi.blend_radius = 0.0;
+        // also set previous to 0
+        if (msr.items.size() > 0)
+          msr.items.back().blend_radius = 0.0;
+      }
+      previous_point = pose.pose.position;
+
       msr.items.push_back(msi);
     }
     msr.items.back().blend_radius = 0.0; // Last element blend must be 0
