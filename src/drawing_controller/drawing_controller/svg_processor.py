@@ -201,11 +201,14 @@ class SVGProcessor():
                                       (getnum(),getnum()),
                                       (getnum(),getnum())]
                     control_points = np.array(control_points)
+                    maxval = np.amax(control_points)
+                    control_points = control_points / maxval #normalize values
                     n = 50
                     curve = cf.cubic_curve(control_points)
                     lin = np.linspace(curve.start(0), curve.end(0), n)
                     coordinates = curve(lin)
                     coordinates = np.nan_to_num(coordinates)
+                    coordinates = coordinates * maxval #denormalize values
                     #self.logger.info("Appending curve points: {}".format(coordinates))
                     x = coordinates[-1][0]
                     y = coordinates[-1][1]
@@ -222,11 +225,16 @@ class SVGProcessor():
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum())]
                     control_points = np.array(control_points)
+                    maxval = np.amax(control_points)
+                    control_points = control_points / maxval #normalize values
                     n = 50
                     curve = cf.cubic_curve(control_points)
                     lin = np.linspace(curve.start(0), curve.end(0), n)
                     coordinates = curve(lin)
                     coordinates = np.nan_to_num(coordinates)
+                    coordinates = coordinates * maxval #denormalize values
+                    #print("got:", coordinates)
+                    #exit()
                     #self.logger.info("Appending curve points: {}".format(coordinates))
                     x = coordinates[-1][0]
                     y = coordinates[-1][1]
