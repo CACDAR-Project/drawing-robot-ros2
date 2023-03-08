@@ -149,10 +149,14 @@ class SVGProcessor():
             return i + 1 < len(path) and isfloat(path[i + 1])
         def setpointup():
             nonlocal output
+            nonlocal x
+            nonlocal y
             p = self.map_point(x,y)
             output.append((p[0],p[1],1.0))
         def setpointdown():
             nonlocal output
+            nonlocal x
+            nonlocal y
             p = self.map_point(x,y)
             output.append((p[0],p[1],0.0))
         def appendpoints(points):
@@ -160,7 +164,14 @@ class SVGProcessor():
             for x,y in points:
                 p = self.map_point(x,y)
                 output.append((p[0],p[1],0.0))
-
+        def lineto(xn,yn):
+            nonlocal output
+            nonlocal x
+            nonlocal y
+            setpointdown()
+            x = xn
+            y = yn
+            setpointdown()
 
         while i < len(path):
             w = path[i]
@@ -181,17 +192,55 @@ class SVGProcessor():
                 continue
             # LineTo commands
             if (w == "L"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    xn = getnum()
+                    yn = getnum()
+                    lineto(xn, yn)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "l"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    xn = x + getnum()
+                    yn = y + getnum()
+                    lineto(xn, yn)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "H"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    xn = getnum()
+                    lineto(xn, y)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "h"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    xn = x + getnum()
+                    lineto(xn, y)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "V"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    yn = getnum()
+                    lineto(x, yn)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "v"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    yn = y + getnum()
+                    lineto(x, yn)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             # Cubic Bézier Curve commands
             if (w == "C"):
                 while True:
