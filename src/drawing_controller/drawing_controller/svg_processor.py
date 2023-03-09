@@ -115,12 +115,15 @@ class SVGProcessor():
                 path.append(c)
 
             # Numbers
-            if c == '-' or c.isdecimal():
+            if c == '+' or c == '-' or c.isdecimal():
                 s = c
-                while i < len(pathstr) and not (c.isspace() or c == ','):
+                isdelim = lambda x: x.isspace() or x == ',' or x.isalpha() or x == '+'
+                while i < len(pathstr) and (not (isdelim(c) or c == '-')):
                     c = pathstr[i]
-                    if c != ',' and not c.isspace():
+                    if not isdelim(c):
                         s = s + c
+                    if c.isalpha():
+                        break
                     i += 1
                 path.append(s)
 
@@ -250,7 +253,7 @@ class SVGProcessor():
                                       (getnum(),getnum()),
                                       (getnum(),getnum())]
                     control_points = np.array(control_points)
-                    maxval = np.amax(control_points)
+                    maxval = np.amax(np.absolute(control_points))
                     control_points = control_points / maxval #normalize values
                     n = 50
                     curve = cf.cubic_curve(control_points)
@@ -274,7 +277,7 @@ class SVGProcessor():
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum())]
                     control_points = np.array(control_points)
-                    maxval = np.amax(control_points)
+                    maxval = np.amax(np.absolute(control_points))
                     control_points = control_points / maxval #normalize values
                     n = 50
                     curve = cf.cubic_curve(control_points)
@@ -340,6 +343,8 @@ class SVGProcessor():
 
             if 'viewBox' in svg.attrib:
                 vb = svg.get('viewBox').split(' ')
+                if (len(vb) < 4): # handle case were comma is delim
+                    vb = vb[0].split(',')
                 self.map_point = self.map_point_function(float(vb[2]),
                                                          float(vb[3]))
                 self.logger.info("Got width:{} and height:{} from viewBox".format(vb[2],vb[3]))
