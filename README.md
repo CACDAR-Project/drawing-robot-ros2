@@ -77,6 +77,104 @@ ros2 run drawing_controller drawing_controller svg/test.svg
 ```
 This will draw the svg image given as the last argument.
 
+## SVG compatibility info
+Tested with SVG from the following programs
+- Inkscape
+- Inkpad
+- Affinitydraw
+- vtracer
+
+Delimiter characters seem to vary somewhat.
+The following examples work:
+TODO ADD EXAMPLES OF SVG PATHS
+
+The following SVG primitives are supported:
+| Primitive                           | Support  |
+|-------------------------------------|----------|
+| <a>                                 | no       |
+| <animate>                           | no       |
+| <animateMotion>                     | no       |
+| <animateTransform>                  | no       |
+| <circle>                            | no       |
+| <clipPath>                          | no       |
+| <defs>                              | no       |
+| <desc>                              | no       |
+| <discard>                           | no       |
+| <ellipse>                           | no       |
+| <feBlend>                           | no       |
+| <feColorMatrix>                     | no       |
+| <feComponentTransfer>               | no       |
+| <feComposite>                       | no       |
+| <feConvolveMatrix>                  | no       |
+| <feDiffuseLighting>                 | no       |
+| <feDisplacementMap>                 | no       |
+| <feDistantLight>                    | no       |
+| <feDropShadow>                      | no       |
+| <feFlood>                           | no       |
+| <feFuncA>                           | no       |
+| <feFuncB>                           | no       |
+| <feFuncG>                           | no       |
+| <feFuncR>                           | no       |
+| <feGaussianBlur>                    | no       |
+| <feImage>                           | no       |
+| <feMerge>                           | no       |
+| <feMergeNode>                       | no       |
+| <feMorphology>                      | no       |
+| <feOffset>                          | no       |
+| <fePointLight>                      | no       |
+| <feSpecularLighting>                | no       |
+| <feSpotLight>                       | no       |
+| <feTile>                            | no       |
+| <feTurbulence>                      | no       |
+| <filter>                            | no       |
+| <foreignObject>                     | no       |
+| <g>                                 | yes      |
+| <hatch>                             | no       |
+| <hatchpath>                         | no       |
+| <image>                             | no       |
+| <line>                              | yes      |
+| <linearGradient>                    | no       |
+| <marker>                            | no       |
+| <mask>                              | no       |
+| <metadata>                          | no       |
+| <mpath>                             | no       |
+| <path>                              | partial  |
+| <pattern>                           | no       |
+| <polygon>                           | yes      |
+| <polyline>                          | yes      |
+| <radialGradient>                    | no       |
+| <rect>                              | no       |
+| <script>                            | no       |
+| <set>                               | no       |
+| <stop>                              | no       |
+| <style>                             | no       |
+| <svg>                               | no       |
+| <switch>                            | no       |
+| <symbol>                            | no       |
+| <text>                              | no       |
+| <textPath>                          | no       |
+| <title>                             | no       |
+| <tspan>                             | no       |
+| <use>                               | no       |
+| <view>                              | no       |
+
+And the following SVG path commands are supported:
+| Command type           | Supported         | Unsupported |
+|------------------------|-------------------|-------------|
+| MoveTo                 |  M, m             |             |
+| LineTo                 |  L, l, H, h, V, v |             |
+| Cubic Bézier Curve     |  C, c, S, s       |             |
+| Quadratic Bézier Curve |                   | Q, q, T, t  |
+| Elliptical Arc Curve   |                   | A, a        |
+| ClosePath              |  Z, z             |             |
+
+
+## Axidraw concerns
+## xArm concerns
+TODO make TCP height diagram
+
+The following paths work, notic
+
 ## Creating compatible SVG images
 https://github.com/visioncortex/vtracer
 
