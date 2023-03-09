@@ -118,15 +118,18 @@ class SVGProcessor():
             # Numbers
             if c == '+' or c == '-' or c.isdecimal():
                 s = c
-                isdelim = lambda x: x.isspace() or x.isalpha() or x in [',', '+']
+                isdelim = lambda x: x.isspace() or (x.isalpha() and c != 'e') or x in [',', '+']
                 while i < len(pathstr) and not isdelim(c):
                     c = pathstr[i]
                     if not isdelim(c):
                         s = s + c
-                    if c.isalpha():
+                    if c.isalpha() and c != 'e':
                         break
                     i += 1
                 path.append(s)
+
+        #print(path)
+        #input()
 
         # Parser
         self.logger.info("Parsing path :'{}...' with {} tokens".format(path[:20], len(path)))
@@ -431,7 +434,7 @@ class SVGProcessor():
         Simplify line with https://pypi.org/project/simplification/
         """
         # For RDP, Try an epsilon of 1.0 to start with. Other sensible values include 0.01, 0.001
-        epsilon = 0.0001
+        epsilon = 0.001
 
         tmp = []
         out = []
