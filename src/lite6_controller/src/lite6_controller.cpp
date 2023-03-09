@@ -80,11 +80,11 @@ public:
   // Set limits for A4 paper
   // 297x210
   float xlim_lower = 0.10;
-  float xlim_upper = 0.30;
-  float ylim_lower = -0.14;
-  float ylim_upper = 0.14;
-  float zlim_lower = 0.19;
-  float zlim_upper = 0.21;
+  float xlim_upper = 0.305;
+  float ylim_lower = -0.1475;
+  float ylim_upper = 0.1475;
+  float zlim_lower = 0.208;
+  float zlim_upper = 0.218;
 
   //bool moved = false;
   //
