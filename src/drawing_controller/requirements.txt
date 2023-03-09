@@ -1,0 +1,4 @@
+lxml==4.9.2
+numpy==1.24.2
+Splipy==1.6.0
+simplification==0.6.2

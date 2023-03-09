@@ -4,6 +4,7 @@ import lxml.etree as ET
 import splipy.curve_factory as cf
 import numpy as np
 import math
+import simplification.cutil
 
 class SVGProcessor():
     """
@@ -117,8 +118,8 @@ class SVGProcessor():
             # Numbers
             if c == '+' or c == '-' or c.isdecimal():
                 s = c
-                isdelim = lambda x: x.isspace() or x == ',' or x.isalpha() or x == '+'
-                while i < len(pathstr) and (not (isdelim(c) or c == '-')):
+                isdelim = lambda x: x.isspace() or x.isalpha() or x in [',', '+']
+                while i < len(pathstr) and not isdelim(c):
                     c = pathstr[i]
                     if not isdelim(c):
                         s = s + c
@@ -139,7 +140,6 @@ class SVGProcessor():
             return float(path[i])
 
         def isfloat(element):
-            #If you expect None to be passed:
             if element is None:
                 return False
             try:
@@ -255,13 +255,15 @@ class SVGProcessor():
                     control_points = np.array(control_points)
                     maxval = np.amax(np.absolute(control_points))
                     control_points = control_points / maxval #normalize values
-                    n = 50
+                    n = 500
                     curve = cf.cubic_curve(control_points)
                     lin = np.linspace(curve.start(0), curve.end(0), n)
                     coordinates = curve(lin)
                     coordinates = np.nan_to_num(coordinates)
                     coordinates = coordinates * maxval #denormalize values
                     #self.logger.info("Appending curve points: {}".format(coordinates))
+                    #print(coordinates)
+                    #input()
                     x = coordinates[-1][0]
                     y = coordinates[-1][1]
                     appendpoints(coordinates)
@@ -382,6 +384,10 @@ class SVGProcessor():
 
                 mm = self.remove_homes(m)
                 mm = self.remove_redundant(mm)
+                #print('before:', len(mm))
+                mm = self.simplify(mm)
+                #print('after:', len(mm))
+                #input()
 
                 #self.logger.info("Refining:'{}...'".format(m[:3]))
                 motions_refined.append(self.down_and_up(mm))
@@ -419,6 +425,33 @@ class SVGProcessor():
             prev = p
             mm.append(p)
         return mm
+
+    def simplify(self, motion):
+        """
+        Simplify line with https://pypi.org/project/simplification/
+        """
+        # For RDP, Try an epsilon of 1.0 to start with. Other sensible values include 0.01, 0.001
+        epsilon = 0.0001
+
+        tmp = []
+        out = []
+        lastup = True
+        sf = lambda l: [ (p[0],p[1],0.0) for p in simplification.cutil.simplify_coords(l, epsilon) ]
+        for p in motion:
+            penup = p[2] > 0
+            if penup and not lastup:
+                out += sf(tmp)
+                tmp = []
+            if penup:
+                out.append(p)
+            else:
+                tmp.append(list(p)[:-1])
+            lastup = penup
+
+        if (len(tmp) > 0):
+            out += sf(tmp)
+
+        return out
 
     def translate(self, val, lmin, lmax, rmin, rmax):
         lspan = lmax - lmin
