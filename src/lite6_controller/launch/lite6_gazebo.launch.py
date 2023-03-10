@@ -302,7 +302,7 @@ def launch_setup(context, *args, **kwargs):
     # FIX acceleration limits
     for i in range(1,7):
         joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 0.5
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
 
     kinematics_yaml['kinematics_solver'] = 'kdl_kinematics_plugin/KDLKinematicsPlugin'
     #kinematics_yaml['kinematics_solver'] = 'lma_kinematics_plugin/LMAKinematicsPlugin'
@@ -335,6 +335,12 @@ def launch_setup(context, *args, **kwargs):
         kinematics_yaml=kinematics_yaml, joint_limits_yaml=joint_limits_yaml,
         prefix=prefix.perform(context))
 
+
+    robot_description_parameters['cartesian_limits'] = {}
+    robot_description_parameters['cartesian_limits']['max_trans_vel'] = 1
+    robot_description_parameters['cartesian_limits']['max_trans_acc'] = 2.25
+    robot_description_parameters['cartesian_limits']['max_trans_dec'] = -5
+    robot_description_parameters['cartesian_limits']['max_rot_vel'] =  1.57
 
 
     # Planning pipeline
