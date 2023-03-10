@@ -219,9 +219,10 @@ public:
 
       planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
       mpr.planner_id = "PTP";
+      //mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
       mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_acceleration_scaling_factor = 1.0;
+      mpr.max_acceleration_scaling_factor = 0.98;
       mpr.allowed_planning_time = 10;
       mpr.max_cartesian_speed = 2; // m/s
       //mpr.goal_constraints.position_constraints.header.frame_id = "world";
@@ -252,11 +253,12 @@ public:
       mpr.goal_constraints.push_back(pose_goal);
 
       msi.req = mpr;
-      //msi.blend_radius = 0.0; //TODO make configurable
-      msi.blend_radius = 1e-15; //TODO make configurable
-      if (coincidentPoints(&pose.pose.position, &previous_point, msi.blend_radius * 1e12))
+      //msi.blend_radius = 6e-7; //TODO make configurable
+      //msi.blend_radius = 0.000001; //TODO make configurable
+      msi.blend_radius = 0.0; //TODO make configurable
+      if (coincidentPoints(&pose.pose.position, &previous_point, msi.blend_radius + 1e-5))
       {
-        RCLCPP_INFO(this->get_logger(), "Detected coincident points, setting blend radius to 0.0");
+        RCLCPP_ERROR(this->get_logger(), "Detected coincident points, setting blend radius to 0.0");
         // if points are too close, set blend radius to zero.
         msi.blend_radius = 0.0;
         // also set previous to 0
@@ -265,6 +267,7 @@ public:
       }
       previous_point = pose.pose.position;
 
+      //RCLCPP_ERROR(this->get_logger(), "Appending point with blend_radius:%f", msi.blend_radius);
       msr.items.push_back(msi);
     }
     msr.items.back().blend_radius = 0.0; // Last element blend must be 0

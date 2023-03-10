@@ -188,7 +188,9 @@ def launch_setup(context, *args, **kwargs):
     # FIX acceleration limits
     for i in range(1,7):
         joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
+        #joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.5
+        #joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 2.5
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 3.0
 
     add_prefix_to_moveit_params = getattr(mod, 'add_prefix_to_moveit_params')
     add_prefix_to_moveit_params(
