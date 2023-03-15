@@ -71,7 +71,7 @@ img1 = ax.scatter(x_succ, y_succ, z_succ, marker='s',
                  s=2, color='green')
   
 img2 = ax.scatter(x_fail, y_fail, z_fail, marker='s',
-                 s=0.1, color='red')
+                 s=1, color='red')
 # adding title and labels
 ax.set_title("3D Heatmap")
 ax.set_xlabel('X-axis')
