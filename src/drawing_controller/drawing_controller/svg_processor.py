@@ -165,6 +165,13 @@ class SVGProcessor():
             nonlocal y
             p = self.map_point(x,y)
             output.append((p[0],p[1],0.0))
+        def dropzeros(points):
+            out = []
+            for x,y in points:
+                if x <= 0.0 or y <= 0.0:
+                    continue
+                out.append([x,y])
+            return out
         def appendpoints(points):
             nonlocal output
             for x,y in points:
@@ -178,6 +185,36 @@ class SVGProcessor():
             x = xn
             y = yn
             setpointdown()
+        def bezier(control_points):
+            nonlocal x
+            nonlocal y
+            control_points = np.array(control_points)
+            #maxval = np.amax(np.absolute(control_points))
+            #print('inpput', control_points)
+            maxval = np.amax(np.absolute(control_points))
+            #print('maxxv', maxval)
+            control_points = control_points / maxval #normalize values
+            n = 10
+            curve = cf.cubic_curve(control_points)
+            lin = np.linspace(curve.start(0), curve.end(0), n)
+            coordinates = curve(lin)
+            coordinates = np.nan_to_num(coordinates)
+            coordinates = coordinates * maxval #denormalize values
+            coordinates = dropzeros(coordinates)
+            #self.logger.info("Appending curve points: {}".format(coordinates))
+            #print(coordinates)
+            #input()
+
+            #print('start', curve.start(0))
+            #print('end', curve.end(0))
+            #print('curve', curve)
+            #print('lin', lin)
+            #print('curvelin', curve(lin))
+            #input()
+            if len(coordinates) > 0:
+                x = coordinates[-1][0]
+                y = coordinates[-1][1]
+            return coordinates
 
         while i < len(path):
             w = path[i]
@@ -255,20 +292,7 @@ class SVGProcessor():
                                       (getnum(),getnum()),
                                       (getnum(),getnum()),
                                       (getnum(),getnum())]
-                    control_points = np.array(control_points)
-                    maxval = np.amax(np.absolute(control_points))
-                    control_points = control_points / maxval #normalize values
-                    n = 500
-                    curve = cf.cubic_curve(control_points)
-                    lin = np.linspace(curve.start(0), curve.end(0), n)
-                    coordinates = curve(lin)
-                    coordinates = np.nan_to_num(coordinates)
-                    coordinates = coordinates * maxval #denormalize values
-                    #self.logger.info("Appending curve points: {}".format(coordinates))
-                    #print(coordinates)
-                    #input()
-                    x = coordinates[-1][0]
-                    y = coordinates[-1][1]
+                    coordinates = bezier(control_points)
                     appendpoints(coordinates)
                     if not nextisnum():
                         break
@@ -281,20 +305,7 @@ class SVGProcessor():
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum())]
-                    control_points = np.array(control_points)
-                    maxval = np.amax(np.absolute(control_points))
-                    control_points = control_points / maxval #normalize values
-                    n = 50
-                    curve = cf.cubic_curve(control_points)
-                    lin = np.linspace(curve.start(0), curve.end(0), n)
-                    coordinates = curve(lin)
-                    coordinates = np.nan_to_num(coordinates)
-                    coordinates = coordinates * maxval #denormalize values
-                    #print("got:", coordinates)
-                    #exit()
-                    #self.logger.info("Appending curve points: {}".format(coordinates))
-                    x = coordinates[-1][0]
-                    y = coordinates[-1][1]
+                    coordinates = bezier(control_points)
                     appendpoints(coordinates)
                     if not nextisnum():
                         break
