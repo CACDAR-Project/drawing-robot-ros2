@@ -43,6 +43,7 @@ RUN apt-get update && \
 # Build interfaces and generic controller first
 COPY ./src/robot_interfaces ${WS_SRC_DIR}/robot_interfaces
 COPY ./src/robot_controller ${WS_SRC_DIR}/robot_controller
+RUN apt-get update
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/robot_interfaces ${WS_SRC_DIR}/robot_controller && \
     rm -rf ${WS_LOG_DIR}
@@ -55,13 +56,15 @@ COPY ./src/virtual_drawing_surface ${WS_SRC_DIR}/virtual_drawing_surface
 RUN pip install -r ${WS_SRC_DIR}/drawing_controller/requirements.txt
 RUN pip install -r ${WS_SRC_DIR}/axidraw_controller/requirements.txt
 RUN pip install -r ${WS_SRC_DIR}/virtual_drawing_surface/requirements.txt
+RUN apt-get update
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     source "${WS_INSTALL_DIR}/local_setup.bash" && \
-    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/draw_svg ${WS_SRC_DIR}/drawing_controller ${WS_SRC_DIR}/axidraw_controller && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/draw_svg ${WS_SRC_DIR}/drawing_controller ${WS_SRC_DIR}/axidraw_controller ${WS_SRC_DIR}/virtual_drawing_surface && \
     rm -rf ${WS_LOG_DIR}
 
 # Build lite6 and xarm packages
 COPY ./src/lite6_controller ${WS_SRC_DIR}/lite6_controller
+RUN apt-get update
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/lite6_controller/lite6_controller.repos && \
     mv ${WS_SRC_DIR}/xarm_ros2/xarm* ${WS_SRC_DIR} && \

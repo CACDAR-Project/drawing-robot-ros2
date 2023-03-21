@@ -14,6 +14,16 @@ The simplest way to run the project currently is by building and running the doc
 bash .docker/build.bash
 ```
 
+If build fails, consider clearing build cache
+
+``` sh
+podman builder prune --all
+```
+or 
+``` sh
+docker builder prune --all
+```
+
 ### Run built container
 ``` sh
 bash .docker/run.bash
