@@ -115,7 +115,7 @@ class SVGPathParser():
             maxval = np.amax(np.absolute(control_points))
             #print('maxxv', maxval)
             control_points = control_points / maxval #normalize values
-            n = 10
+            n = 50
             curve = cf.cubic_curve(control_points)
             lin = np.linspace(curve.start(0), curve.end(0), n)
             coordinates = curve(lin)

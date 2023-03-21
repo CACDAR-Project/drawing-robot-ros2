@@ -88,6 +88,9 @@ Delimiter characters seem to vary somewhat.
 The following examples work:
 TODO ADD EXAMPLES OF SVG PATHS
 
+Make sure that all shapes in the SVG are within the bounds defined by height and width (or viewbox).
+Shapes outside of bounds will cause the robot to frequently visit the top left corner and edges of the paper and not draw the desired image.
+
 The following SVG primitives are supported:
 | Primitive                           | Support  |
 |-------------------------------------|----------|

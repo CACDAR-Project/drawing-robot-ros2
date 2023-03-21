@@ -1,5 +1,9 @@
 # 3D Heatmap in Python using matplotlib
-  
+# Script expects a csv consisting of lines in the format:
+#   success, 10.0 14.2 14.4, 1.0 2.0 3.0, ...
+#   failure, 10.0 14.2 14.4, 1.0 2.0 3.0, ...
+# Usage: python plot_lite6_csv.py OUTPUT.csv
+
 # to make plot interactive 
 #%matplotlib
   

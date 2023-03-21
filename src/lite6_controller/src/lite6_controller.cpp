@@ -83,7 +83,7 @@ public:
   float xlim_upper = 0.305;
   float ylim_lower = -0.1475;
   float ylim_upper = 0.1475;
-  float zlim_lower = 0.208;
+  float zlim_lower = 0.210;
   float zlim_upper = 0.218;
 
   //bool moved = false;
@@ -113,7 +113,10 @@ public:
     //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
     // Use upper joint velocity and acceleration limits
     this->move_group.setMaxAccelerationScalingFactor(1.0);
-    this->move_group.setMaxVelocityScalingFactor(1.0);
+
+    //setting this lower seems to improve overall time and prevents robot from moving too fast
+    //this->move_group.setMaxVelocityScalingFactor(1.0);
+    this->move_group.setMaxVelocityScalingFactor(0.8);
 
     // Subscribe to target pose
     //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
