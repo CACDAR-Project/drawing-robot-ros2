@@ -64,12 +64,15 @@ RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
 
 # Build lite6 and xarm packages
 COPY ./src/lite6_controller ${WS_SRC_DIR}/lite6_controller
+COPY ./src/custom_xarm_description ${WS_SRC_DIR}/custom_xarm_description
+COPY ./src/custom_xarm_moveit_config ${WS_SRC_DIR}/custom_xarm_moveit_config
+COPY ./src/custom_xarm_gazebo ${WS_SRC_DIR}/custom_xarm_gazebo
 RUN apt-get update
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     vcs import --recursive --shallow ${WS_SRC_DIR} < ${WS_SRC_DIR}/lite6_controller/lite6_controller.repos && \
     mv ${WS_SRC_DIR}/xarm_ros2/xarm* ${WS_SRC_DIR} && \
     rosdep install -y -r -i --rosdistro "${ROS_DISTRO}" --from-paths ${WS_SRC_DIR}/xarm_* && \
-    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/xarm_* ${WS_SRC_DIR}/lite6_controller && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/xarm_* ${WS_SRC_DIR}/lite6_controller ${WS_SRC_DIR}/custom_xarm_description ${WS_SRC_DIR}/custom_xarm_moveit_config ${WS_SRC_DIR}/custom_xarm_gazebo && \
     rm -rf ${WS_LOG_DIR}
 
 # Copy example svg images
