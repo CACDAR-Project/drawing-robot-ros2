@@ -14,14 +14,14 @@ The simplest way to run the project currently is by building and running the doc
 bash .docker/build.bash
 ```
 
-If build fails, consider clearing build cache
-
+If build fails, consider clearing build cache.
+Do not run this if you have other docker containers that you care about on your computer.
 ``` sh
-podman builder prune --all
+podman builder prune --all --force
 ```
 or 
 ``` sh
-docker builder prune --all
+docker builder prune --all --force
 ```
 
 ### Run built container
