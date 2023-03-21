@@ -149,7 +149,7 @@ class SVGProcessor():
                     continue
 
                 mm = self.remove_homes(m)
-                mm = self.remove_redundant(mm)
+                #mm = self.remove_redundant(mm)
                 #print('before:', len(mm))
                 mm = self.simplify(mm)
                 #print('after:', len(mm))
