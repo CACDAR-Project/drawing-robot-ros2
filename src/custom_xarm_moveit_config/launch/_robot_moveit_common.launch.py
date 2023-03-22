@@ -52,7 +52,7 @@ def launch_setup(context, *args, **kwargs):
 
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
 
-    moveit_config_package_name = 'xarm_moveit_config'
+    moveit_config_package_name = 'custom_xarm_moveit_config'
     xarm_type = '{}{}'.format(robot_type.perform(context), dof.perform(context))
 
     # robot_description_parameters
@@ -60,8 +60,8 @@ def launch_setup(context, *args, **kwargs):
     mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory(moveit_config_package_name), 'launch', 'lib', 'robot_moveit_config_lib.py'))
     get_xarm_robot_description_parameters = getattr(mod, 'get_xarm_robot_description_parameters')
     robot_description_parameters = get_xarm_robot_description_parameters(
-        xacro_urdf_file=PathJoinSubstitution([FindPackageShare('xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
-        xacro_srdf_file=PathJoinSubstitution([FindPackageShare('xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
+        xacro_urdf_file=PathJoinSubstitution([FindPackageShare('custom_xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
+        xacro_srdf_file=PathJoinSubstitution([FindPackageShare('custom_xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
         urdf_arguments={
             'prefix': prefix,
             'hw_ns': hw_ns.perform(context).strip('/'),
@@ -106,6 +106,7 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
+    #joint_limits_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'joint_limits.yaml')
 
     if add_gripper.perform(context) in ('True', 'true'):
         gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
@@ -174,6 +175,31 @@ def launch_setup(context, *args, **kwargs):
         # },
     }
 
+    # FIX acceleration limits
+    for i in range(1,7):
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
+        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
+
+    #robot_description_parameters['cartesian_limits'] = {}
+    #robot_description_parameters['cartesian_limits']['max_trans_vel'] = 1
+    #robot_description_parameters['cartesian_limits']['max_trans_acc'] = 2.25
+    #robot_description_parameters['cartesian_limits']['max_trans_dec'] = -5
+    #robot_description_parameters['cartesian_limits']['max_rot_vel'] =  1.57
+
+    pilz_planning_pipeline_config = {
+        'move_group': {
+            'planning_plugin': 'pilz_industrial_motion_planner/CommandPlanner',
+            # Disable AddTimeOptimalParameterization to fix motion blending https://github.com/ros-planning/moveit/issues/2905
+            'request_adapters': """default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            #'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            "default_planner_config": "PTP",
+        }
+    }
+
+    move_group_capabilities = {
+        "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService"
+    }
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -181,7 +207,9 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[
             robot_description_parameters,
-            ompl_planning_pipeline_config,
+            #ompl_planning_pipeline_config,
+            pilz_planning_pipeline_config,
+            move_group_capabilities,
             trajectory_execution,
             plan_execution,
             moveit_controllers,
