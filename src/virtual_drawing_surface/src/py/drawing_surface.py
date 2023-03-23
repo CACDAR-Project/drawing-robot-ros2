@@ -20,14 +20,21 @@ from PIL import ImageTk
 from PIL import Image as PImage
 import numpy as np
 
+def bound(val, lim1, lim2):
+    minval = min(lim1,lim2)
+    maxval = max(lim1,lim2)
+    val = max(minval, val)
+    val = min(maxval, val)
+    return val
 
 def translate(val, lmin, lmax, rmin, rmax):
-    val = max(lmin, val)
-    val = min(lmax, val)
+    #val = bound(val, lmin, lmax)
     lspan = lmax - lmin
     rspan = rmax - rmin
     val = float(val - lmin) / float(lspan)
-    return rmin + (val * rspan)
+    val = rmin + (val * rspan)
+    val = bound(val,rmin, rmax)
+    return val
 
 class DrawingApp(tk.Tk):
     def __init__(self, point_queue, image_queue):
@@ -37,12 +44,15 @@ class DrawingApp(tk.Tk):
         self.image_queue = image_queue
 
         #300dpi A4 paper is 2480x3508 px
-        self.width = 3508
-        self.height = 2480
+        #self.width = 3508
+        #self.height = 2480
+        #200dpi A4 paper is 1654x2339 px -->
+        self.width = 1654
+        self.height = 2339
         self.img = PImage.new("RGB", (self.width, self.height), (255, 255, 255))
         self.arr = np.array(self.img)
         self.frame_delay = 1 #ms
-        self.window_update_delay = 300 #ms
+        self.window_update_delay = 500 #ms
         self.counter = 0
         self.read_queue()
 
@@ -63,14 +73,12 @@ class DrawingApp(tk.Tk):
     def draw(self,x,y,z):
         # putpixel is too slow
         #self.img.putpixel((int(x), int(y)), (255, 0, 0))
-        self.arr[x,y,1] = 0
-        self.arr[x,y,2] = 0
-        self.arr[x+1,y,1] = 0
-        self.arr[x+1,y,2] = 0
-        self.arr[x+1,y+1,1] = 0
-        self.arr[x+1,y+1,2] = 0
-        self.arr[x,y+1,1] = 0
-        self.arr[x,y+1,2] = 0
+        r = 4 # radius
+        for xp in range(max(0, x-r), min(self.width-1, x+r)):
+            for yp in range(max(0, y-r), min(self.height-1, y+r)):
+                self.arr[xp,yp,0] = 0 #red
+                self.arr[xp,yp,1] = 0 #green
+                self.arr[xp,yp,2] = 0 #blue
         #print("Set x:{} y:{} to:{}".format(x,y,255))
 
     def draw_window(self):
@@ -93,11 +101,16 @@ class DrawingApp(tk.Tk):
             #y = translate(p.y, 0.5, -1.0, 0, self.height)
             #<pose>-0.1485 -0.3 0.5 0 0 0</pose>
             #<size>0.297 0.21</size>
-            x = translate(p.x, -0.1485, 0.1485, 0, self.width)
-            y = translate(p.y, -0.3, -0.09, 0, self.height)
+            #x = translate(p.x, -0.1485, 0.1485, 0, self.width)
+            #y = translate(p.y, -0.51, -0.3, 0, self.height)
 
+            x = int(translate(p.y, -0.5, 0.5, 0, self.width))
+            y = int(translate(p.x, -0.3485, 0.1, 0, self.height))
 
-            self.draw(int(x),int(y),0)
+            #x = bound(self.width - x, 0, self.width)
+            #y = bound(self.height - y, 0, self.height)
+
+            self.draw(x, y, 0)
 
         if self.counter >= self.window_update_delay:
             #print("Redraw")
