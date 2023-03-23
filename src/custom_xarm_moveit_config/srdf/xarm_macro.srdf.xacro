@@ -9,7 +9,7 @@
     </xacro:if>
     <xacro:if value="${dof == 6}">
       <xacro:if value="${robot_type == 'lite'}">
-        <xacro:include filename="$(find xarm_moveit_config)/srdf/_lite6_macro.srdf.xacro" />
+        <xacro:include filename="$(find custom_xarm_moveit_config)/srdf/_lite6_macro.srdf.xacro" />
         <xacro:lite6_macro_srdf prefix="${prefix}" 
           add_gripper="${add_gripper}" add_vacuum_gripper="${add_vacuum_gripper}" add_other_geometry="${add_other_geometry}"  />
       </xacro:if>

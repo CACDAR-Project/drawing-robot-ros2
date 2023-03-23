@@ -13,6 +13,7 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
+from launch.actions import TimerAction
 
 def launch_setup(context, *args, **kwargs):
     prefix = LaunchConfiguration('prefix', default='')
@@ -184,8 +185,8 @@ def launch_setup(context, *args, **kwargs):
     # robot gazebo launch
     # xarm_gazebo/launch/_robot_beside_table_gazebo.launch.py
     robot_gazebo_launch = IncludeLaunchDescription(
-        #PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('custom_xarm_gazebo'), 'launch', '_robot_beside_table_gazebo.launch.py'])),
-        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('draw_svg'), 'launch', 'robots', 'lite6_table.launch.py'])),
+        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('custom_xarm_gazebo'), 'launch', '_robot_beside_table_gazebo.launch.py'])),
+        #PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('draw_svg'), 'launch', 'robots', 'lite6_table.launch.py'])),
         launch_arguments={
             'prefix': prefix,
             'hw_ns': hw_ns,
@@ -198,6 +199,7 @@ def launch_setup(context, *args, **kwargs):
             'robot_type': robot_type,
             'ros2_control_plugin': ros2_control_plugin,
             'load_controller': 'true',
+            #'load_controller': 'false',
         }.items(),
     )
 
@@ -206,7 +208,10 @@ def launch_setup(context, *args, **kwargs):
         robot_moveit_common_launch,
         joint_state_publisher_node,
         ros2_control_launch,
-        robot_gazebo_launch,
+        # Wait before launching gazebo
+        TimerAction(period=5.0, actions=[
+            robot_gazebo_launch,
+        ]),
     ] + load_controllers
 
 

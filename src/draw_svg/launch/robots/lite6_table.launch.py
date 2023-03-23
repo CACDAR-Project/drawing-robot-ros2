@@ -54,12 +54,12 @@ def launch_setup(context, *args, **kwargs):
 
     # robot_description
     # xarm_description/launch/lib/robot_description_lib.py
-    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('xarm_description'), 'launch', 'lib', 'robot_description_lib.py'))
+    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('custom_xarm_description'), 'launch', 'lib', 'robot_description_lib.py'))
     #mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('draw_svg'), 'launch', 'robots', 'xarm_with_pen.py'))
     get_xacro_file_content = getattr(mod, 'get_xacro_file_content')
     robot_description = {
         'robot_description': get_xacro_file_content(
-            xacro_file=PathJoinSubstitution([FindPackageShare('xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
+            xacro_file=PathJoinSubstitution([FindPackageShare('custom_xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
             #xacro_file=PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']),
             arguments={
                 'prefix': prefix,
@@ -105,6 +105,7 @@ def launch_setup(context, *args, **kwargs):
     # gazebo_ros/launch/gazebo.launch.py
     #xarm_gazebo_world = PathJoinSubstitution([FindPackageShare('xarm_gazebo'), 'worlds', 'table.world'])
     xarm_gazebo_world = PathJoinSubstitution([FindPackageShare('draw_svg'), 'worlds', 'draw_svg_world.sdf'])
+    #xarm_gazebo_world = PathJoinSubstitution([FindPackageShare('custom_xarm_gazebo'), 'worlds', 'table.world'])
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('gazebo_ros'), 'launch', 'gazebo.launch.py'])),
         launch_arguments={
@@ -143,6 +144,8 @@ def launch_setup(context, *args, **kwargs):
     load_controllers = []
     if load_controller.perform(context) in ('True', 'true'):
         for controller in controllers:
+            #print("Attempting to load: ", controller)
+            #input()
             load_controllers.append(Node(
                 package='controller_manager',
                 #executable='spawner.py',

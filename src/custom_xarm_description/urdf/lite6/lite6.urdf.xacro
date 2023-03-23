@@ -363,5 +363,50 @@
       <child
         link="${prefix}link_eef" />
     </joint> -->
+
+
+    <link name="${prefix}pen_link">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+            <cylinder radius="0.005" length="0.2"/>
+        </geometry>
+        <material name="Cyan">
+            <color rgba="0.0 1.0 1.0 1.0"/>
+        </material>
+    </visual>
+
+    <collision>
+        <geometry>
+            <box size="0 0 0"/>
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="${prefix}pen_joint" type="fixed">
+      <parent link="${prefix}link6"/>
+      <child link="${prefix}pen_link"/>
+    </joint>
+
+  <!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/foxy/gazebo_plugins/src/gazebo_ros_p3d.cpp -->
+  <gazebo>
+    <plugin name="pen_position" filename="libgazebo_ros_p3d.so">
+        <!-- <alwaysOn>true</alwaysOn> -->
+      <ros>
+        <remapping>odom:=pen_position</remapping>
+      </ros>
+      <frame_name>world</frame_name>
+      <!-- <body_name>pen_link</body_name> -->
+      <body_name>${prefix}link6</body_name>
+      <!-- <body_name>${prefix}pen_link</body_name> -->
+      <!--       topic name is always /odom -->
+      <!-- <topic_name>pen_position</topic_name> -->
+      <!--       Update rate in Hz -->
+      <update_rate>10</update_rate>
+      <!-- <xyzOffsets>0 0 0</xyzOffsets> -->
+      <!-- <rpyOffsets>0 0 0</rpyOffsets> -->
+    </plugin>
+  </gazebo>
+
   </xacro:macro>
 </robot>
