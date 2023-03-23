@@ -22,6 +22,8 @@ import numpy as np
 
 
 def translate(val, lmin, lmax, rmin, rmax):
+    val = max(lmin, val)
+    val = min(lmax, val)
     lspan = lmax - lmin
     rspan = rmax - rmin
     val = float(val - lmin) / float(lspan)
@@ -33,8 +35,10 @@ class DrawingApp(tk.Tk):
 
         self.point_queue = point_queue
         self.image_queue = image_queue
-        self.width = 400
-        self.height = 400
+
+        #300dpi A4 paper is 2480x3508 px
+        self.width = 3508
+        self.height = 2480
         self.img = PImage.new("RGB", (self.width, self.height), (255, 255, 255))
         self.arr = np.array(self.img)
         self.frame_delay = 1 #ms
@@ -87,8 +91,12 @@ class DrawingApp(tk.Tk):
             p = self.point_queue.get()
             #x = translate(p.x, -1.0, 0.5, 0, self.width)
             #y = translate(p.y, 0.5, -1.0, 0, self.height)
-            x = translate(p.x, -1.0, 0.5, 0, self.width)
-            y = translate(p.y, -1.0, 0.5, 0, self.height)
+            #<pose>-0.1485 -0.3 0.5 0 0 0</pose>
+            #<size>0.297 0.21</size>
+            x = translate(p.x, -0.1485, 0.1485, 0, self.width)
+            y = translate(p.y, -0.3, -0.09, 0, self.height)
+
+
             self.draw(int(x),int(y),0)
 
         if self.counter >= self.window_update_delay:
