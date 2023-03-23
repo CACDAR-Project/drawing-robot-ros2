@@ -49,7 +49,6 @@ RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     rm -rf ${WS_LOG_DIR}
 
 # Build packages
-COPY ./src/draw_svg ${WS_SRC_DIR}/draw_svg
 COPY ./src/drawing_controller ${WS_SRC_DIR}/drawing_controller
 COPY ./src/axidraw_controller ${WS_SRC_DIR}/axidraw_controller
 COPY ./src/virtual_drawing_surface ${WS_SRC_DIR}/virtual_drawing_surface
@@ -59,7 +58,7 @@ RUN pip install -r ${WS_SRC_DIR}/virtual_drawing_surface/requirements.txt
 RUN apt-get update
 RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     source "${WS_INSTALL_DIR}/local_setup.bash" && \
-    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/draw_svg ${WS_SRC_DIR}/drawing_controller ${WS_SRC_DIR}/axidraw_controller ${WS_SRC_DIR}/virtual_drawing_surface && \
+    colcon build --merge-install --symlink-install --cmake-args "-DCMAKE_BUILD_TYPE=Release" --paths ${WS_SRC_DIR}/drawing_controller ${WS_SRC_DIR}/axidraw_controller ${WS_SRC_DIR}/virtual_drawing_surface && \
     rm -rf ${WS_LOG_DIR}
 
 # Build lite6 and xarm packages
