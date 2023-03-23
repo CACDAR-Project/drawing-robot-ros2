@@ -111,108 +111,71 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
-    # URDF
-    _robot_description_xml = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']
-            ),
-            #PathJoinSubstitution(
-            #    [
-            #        FindPackageShare('xarm_description'),
-            #        "urdf",
-            #        "lite6",
-            #        #"lite6.urdf.xacro",
-            #        "lite6_robot_macro.xacro",
-            #    ]
-            #),
-            " ",
-            #"name:=", "lite6", " ",
-            "prefix:=", " ",
-            "hw_ns:=", hw_ns, " ",
-            "limited:=", limited, " ",
-            "effort_control:=", effort_control, " ",
-            "velocity_control:=", velocity_control, " ",
-            "add_gripper:=", add_gripper, " ",
-            "add_vacuum_gripper:=", add_vacuum_gripper, " ",
-            "dof:=", dof, " ",
-            "robot_type:=", robot_type, " ",
-            "ros2_control_plugin:=", ros2_control_plugin, " ",
-            #"ros2_control_params:=", ros2_control_params, " ",
 
-            "add_other_geometry:=", add_other_geometry, " ",
-            "geometry_type:=", geometry_type, " ",
-            "geometry_mass:=", geometry_mass, " ",
-            "geometry_height:=", geometry_height, " ",
-            "geometry_radius:=", geometry_radius, " ",
-            "geometry_length:=", geometry_length, " ",
-            "geometry_width:=", geometry_width, " ",
-            "geometry_mesh_filename:=", geometry_mesh_filename, " ",
-            "geometry_mesh_origin_xyz:=", geometry_mesh_origin_xyz, " ",
-            "geometry_mesh_origin_rpy:=", geometry_mesh_origin_rpy, " ",
-            "geometry_mesh_tcp_xyz:=", geometry_mesh_tcp_xyz, " ",
-            "geometry_mesh_tcp_rpy:=", geometry_mesh_tcp_rpy, " ",
-
-            #"robot_ip:=", robot_ip, " ",
-            #"report_type:=", report_type, " ",
-            #"baud_checkset:=", baud_checkset, " ",
-            #"default_gripper_baud:=", default_gripper_baud, " ",
-        ]
-    )
-    # TODO fix URDF loading
-    # xacro urdf/xarm_pen.urdf.xacro prefix:= hw_ns:=xarm dof:=6 limited:=false effort_control:=false velocity_control:=false add_gripper:=false add_vacuum_gripper:=false robot_type:=lite ros2_control_plugin:=gazebo_ros2_control/GazeboSystem add_other_geometry:=false geometry_type:=cylinder geometry_mass:=0.05 geometry_height:=0.1 geometry_radius:=0.005 geometry_length:=0.07 geometry_width:=0.1 geometry_mesh_filename:= geometry_mesh_origin_xyz:="0 0 0" geometry_mesh_origin_rpy:="0 0 0" geometry_mesh_tcp_xyz:="0 0 0" geometry_mesh_tcp_rpy:="0 0 0"
-    _robot_description_xml = Command(['cat ', PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'lite6.tmp.urdf'])])
-    robot_description = {"robot_description": _robot_description_xml}
-    # SRDF
-    _robot_description_semantic_xml = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [
-                    FindPackageShare('custom_xarm_moveit_config'),
-                    "srdf",
-                    #"_lite6_macro.srdf.xacro",
-                    "xarm.srdf.xacro",
-                ]
-            ),
-            " ",
-            #"name:=", "lite6", " ",
-            "prefix:=", " ",
-            #"hw_ns:=", hw_ns, " ",
-            #"limited:=", limited, " ",
-            #"effort_control:=", effort_control, " ",
-            #"velocity_control:=", velocity_control, " ",
-            #"add_gripper:=", add_gripper, " ",
-            #"add_vacuum_gripper:=", add_vacuum_gripper, " ",
-            "dof:=", dof, " ",
-            "robot_type:=", robot_type, " ",
-            #"ros2_control_plugin:=", ros2_control_plugin, " ",
-            #"ros2_control_params:=", ros2_control_params, " ",
-
-            #"add_other_geometry:=", add_other_geometry, " ",
-            #"geometry_type:=", geometry_type, " ",
-            #"geometry_mass:=", geometry_mass, " ",
-            #"geometry_height:=", geometry_height, " ",
-            #"geometry_radius:=", geometry_radius, " ",
-            #"geometry_length:=", geometry_length, " ",
-            #"geometry_width:=", geometry_width, " ",
-            #"geometry_mesh_filename:=", geometry_mesh_filename, " ",
-            #"geometry_mesh_origin_xyz:=", geometry_mesh_origin_xyz, " ",
-            #"geometry_mesh_origin_rpy:=", geometry_mesh_origin_rpy, " ",
-            #"geometry_mesh_tcp_xyz:=", geometry_mesh_tcp_xyz, " ",
-            #"geometry_mesh_tcp_rpy:=", geometry_mesh_tcp_rpy, " ",
-
-            #"robot_ip:=", robot_ip, " ",
-            #"report_type:=", report_type, " ",
-            #"baud_checkset:=", baud_checkset, " ",
-            #"default_gripper_baud:=", default_gripper_baud, " ",
-        ]
-    )
+    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('custom_xarm_description'), 'launch', 'lib', 'robot_description_lib.py'))
+    #mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('draw_svg'), 'launch', 'robots', 'xarm_with_pen.py'))
+    get_xacro_file_content = getattr(mod, 'get_xacro_file_content')
+    robot_description = {
+        'robot_description': get_xacro_file_content(
+            xacro_file=PathJoinSubstitution([FindPackageShare('custom_xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
+            #xacro_file=PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']),
+            arguments={
+                'prefix': prefix,
+                'dof': dof,
+                'robot_type': robot_type,
+                'add_gripper': add_gripper,
+                'add_vacuum_gripper': add_vacuum_gripper,
+                'hw_ns': hw_ns.perform(context).strip('/'),
+                'limited': limited,
+                'effort_control': effort_control,
+                'velocity_control': velocity_control,
+                'ros2_control_plugin': ros2_control_plugin,
+                #'ros2_control_params': ros2_control_params,
+                'add_other_geometry': add_other_geometry,
+                'geometry_type': geometry_type,
+                'geometry_mass': geometry_mass,
+                'geometry_height': geometry_height,
+                'geometry_radius': geometry_radius,
+                'geometry_length': geometry_length,
+                'geometry_width': geometry_width,
+                'geometry_mesh_filename': geometry_mesh_filename,
+                'geometry_mesh_origin_xyz': geometry_mesh_origin_xyz,
+                'geometry_mesh_origin_rpy': geometry_mesh_origin_rpy,
+                'geometry_mesh_tcp_xyz': geometry_mesh_tcp_xyz,
+                'geometry_mesh_tcp_rpy': geometry_mesh_tcp_rpy,
+            }
+        ),
+    }
     robot_description_semantic = {
-        "robot_description_semantic": _robot_description_semantic_xml
+        'robot_description_semantic': get_xacro_file_content(
+            xacro_file=PathJoinSubstitution([FindPackageShare('custom_xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
+            #xacro_file=PathJoinSubstitution([FindPackageShare('draw_svg'), 'urdf', 'xarm_pen.urdf.xacro']),
+            arguments={
+                'prefix': prefix,
+                'dof': dof,
+                'robot_type': robot_type,
+                'add_gripper': add_gripper,
+                'add_vacuum_gripper': add_vacuum_gripper,
+                'hw_ns': hw_ns.perform(context).strip('/'),
+                'limited': limited,
+                'effort_control': effort_control,
+                'velocity_control': velocity_control,
+                'ros2_control_plugin': ros2_control_plugin,
+                #'ros2_control_params': ros2_control_params,
+                'add_other_geometry': add_other_geometry,
+                'geometry_type': geometry_type,
+                'geometry_mass': geometry_mass,
+                'geometry_height': geometry_height,
+                'geometry_radius': geometry_radius,
+                'geometry_length': geometry_length,
+                'geometry_width': geometry_width,
+                'geometry_mesh_filename': geometry_mesh_filename,
+                'geometry_mesh_origin_xyz': geometry_mesh_origin_xyz,
+                'geometry_mesh_origin_rpy': geometry_mesh_origin_rpy,
+                'geometry_mesh_tcp_xyz': geometry_mesh_tcp_xyz,
+                'geometry_mesh_tcp_rpy': geometry_mesh_tcp_rpy,
+            }
+        ),
     }
 
 
