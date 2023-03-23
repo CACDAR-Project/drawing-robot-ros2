@@ -402,7 +402,7 @@
       <!--       topic name is always /odom -->
       <!-- <topic_name>pen_position</topic_name> -->
       <!--       Update rate in Hz -->
-      <update_rate>10</update_rate>
+      <update_rate>1000</update_rate>
       <!-- <xyzOffsets>0 0 0</xyzOffsets> -->
       <!-- <rpyOffsets>0 0 0</rpyOffsets> -->
     </plugin>

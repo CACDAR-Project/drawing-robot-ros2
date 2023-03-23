@@ -94,8 +94,8 @@ def launch_setup(context, *args, **kwargs):
     # xarm_gazebo/launch/_robot_beside_table_gazebo.launch.py
     robot_gazebo_launch = IncludeLaunchDescription(
         #PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('xarm_gazebo'), 'launch', '_robot_beside_table_gazebo.launch.py'])),
-        #PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('custom_xarm_gazebo'), 'launch', '_robot_beside_table_gazebo.launch.py'])),
-        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('draw_svg'), 'launch', 'robots', 'lite6_table.launch.py'])),
+        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('custom_xarm_gazebo'), 'launch', 'lite6_virtual_surface.launch.py'])),
+        #PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('draw_svg'), 'launch', 'robots', 'lite6_table.launch.py'])),
         launch_arguments={
             'prefix': prefix,
             'hw_ns': hw_ns,
@@ -229,7 +229,7 @@ def launch_setup(context, *args, **kwargs):
             ],
         ),
         Node(
-            package="draw_svg",
+            package="virtual_drawing_surface",
             executable="drawing_surface.py",
             output="log",
             arguments=["--ros-args", "--log-level", log_level],
