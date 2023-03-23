@@ -29,26 +29,18 @@ docker builder prune --all --force
 bash .docker/run.bash
 ```
 
+### Develop 
 If active changes are being made, run:
 ``` sh
 bash .docker/devel.bash
 ```
 This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
 
-## TODO Building locally
-
-Requirements:
-- python3-pip 
-- python3-pil.imagetk
-- ros-humble-moveit
-- ros-humble-ros-gz
-- ignition-fortress
-
+So to test changes in the container
 ``` sh
-./rebuild.sh
-```
-``` sh
-source src/install/local_setup.bash
+cd src/drawing-robot-ros2/src
+colcon build
+source install/local_setup.bash
 ```
 
 ## Running
