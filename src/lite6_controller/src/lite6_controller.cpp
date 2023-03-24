@@ -3,7 +3,7 @@
 #include <robot_controller/robot_controller.hpp>
 #include <chrono>
 #include <cstdlib>
-//#include <queue>
+#include <queue>
 
 #include <fstream>
 #include <iostream>
@@ -28,6 +28,7 @@
 
 
 #include <moveit_msgs/msg/constraints.hpp>
+#include <moveit_msgs/msg/robot_trajectory.hpp>
 #include <moveit_msgs/msg/motion_plan_request.hpp>
 #include <moveit_msgs/msg/motion_sequence_request.hpp>
 #include <moveit_msgs/msg/motion_sequence_item.hpp>
@@ -65,6 +66,11 @@ public:
    * Move group interface for the robot
    */
   moveit::planning_interface::MoveGroupInterface move_group;
+  moveit::core::RobotStatePtr move_group_state;
+
+  std::queue<moveit_msgs::msg::RobotTrajectory> trajectory_queue;
+  rclcpp::TimerBase::SharedPtr trajectory_timer_;
+  bool busy = false;
 
   /**
    * TODO Use instead of MoveGroupInterface
@@ -121,6 +127,10 @@ public:
     // Subscribe to target pose
     //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
 
+    //
+    trajectory_timer_ = this->create_wall_timer(
+      10ms, std::bind(&Lite6Controller::executeTrajectoryFromQueue, this));
+
   }
 
   void setup()
@@ -135,6 +145,9 @@ public:
 
       planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(this->shared_from_this(),
                                                                                                "robot_description");
+      //RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Getting initial robot state");
+      //move_group.startStateMonitor(5);
+
       this->sequence_client_ =
         this->create_client<moveit_msgs::srv::GetMotionSequence>("plan_sequence_path");
 
@@ -151,7 +164,6 @@ public:
       RCLCPP_ERROR(this->get_logger(), "Initialization Failed: %d", e);
       return;
     }
-
 
     move_group.setPlanningTime(30.0);
     RCLCPP_INFO(this->get_logger(), "Initialization successful.");
@@ -274,8 +286,12 @@ public:
       msr.items.push_back(msi);
     }
     msr.items.back().blend_radius = 0.0; // Last element blend must be 0
-    moveit::core::RobotStatePtr move_group_state = move_group.getCurrentState();
     moveit_msgs::msg::RobotState state_msg;
+    if (move_group_state == NULL)
+    {
+      RCLCPP_INFO(this->get_logger(), "Getting robot state");
+      move_group_state = move_group.getCurrentState(10);
+    }
     moveit::core::robotStateToRobotStateMsg(*move_group_state, state_msg);
     msr.items.front().req.start_state = state_msg;
     return msr;
@@ -382,6 +398,17 @@ public:
     }
   }
 
+  void executeTrajectoryFromQueue()
+  {
+    if (busy || trajectory_queue.empty())
+      return;
+    busy = true;
+    RCLCPP_INFO(this->get_logger(), "Executing next trajectory from queue");
+    move_group.execute(trajectory_queue.front());
+    trajectory_queue.pop();
+    busy = false;
+  }
+
   /**
    * Callback that executes path on robot
    */
@@ -412,8 +439,14 @@ public:
     {
       status = "success";
       RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
-      RCLCPP_INFO(this->get_logger(), "Executing result");
-      move_group.execute(ts[0]);
+      RCLCPP_INFO(this->get_logger(), "Adding result to motion queue");
+
+      trajectory_queue.push(ts[0]);
+
+      // Set move_group_state to the last state of planned trajectory (planning of next trajectory starts there)
+      robot_trajectory::RobotTrajectory rt(move_group.getRobotModel());
+      rt.setRobotTrajectoryMsg(*move_group_state, ts[0]);
+      move_group_state = rt.getLastWayPointPtr();
 
       status = status + "," + pointsToString(&goal->motion.path,0,0,0);
       appendLineToFile("OUTPUT.csv", status);
