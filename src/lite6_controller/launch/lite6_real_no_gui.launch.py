@@ -156,9 +156,9 @@ def launch_setup(context, *args, **kwargs):
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
     # FIX acceleration limits
-    for i in range(1,7):
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
+    #for i in range(1,7):
+    #    joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
+    #    joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.0
 
     if add_gripper.perform(context) in ('True', 'true'):
         gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
@@ -182,8 +182,8 @@ def launch_setup(context, *args, **kwargs):
         kinematics_yaml=kinematics_yaml, joint_limits_yaml=joint_limits_yaml,
         prefix=prefix.perform(context))
 
-    cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
-    robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']
+    #cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
+    #robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']
 
     # Planning Configuration
     ompl_planning_pipeline_config = {

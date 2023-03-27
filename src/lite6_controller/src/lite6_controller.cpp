@@ -233,13 +233,15 @@ public:
       moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
 
       planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
-      mpr.planner_id = "PTP";
-      //mpr.planner_id = "LIN";
+      //mpr.planner_id = "PTP";
+      mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
-      mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_acceleration_scaling_factor = 0.98;
+      //mpr.max_velocity_scaling_factor = 1.0;
+      mpr.max_velocity_scaling_factor = 0.7;
+      mpr.max_acceleration_scaling_factor = 0.4;
+      //mpr.max_acceleration_scaling_factor = 0.1;
       mpr.allowed_planning_time = 10;
-      mpr.max_cartesian_speed = 2; // m/s
+      mpr.max_cartesian_speed = 3; // m/s
       //mpr.goal_constraints.position_constraints.header.frame_id = "world";
 
       // A tolerance of 0.01 m is specified in position

@@ -65,19 +65,22 @@ def add_prefix_to_moveit_params(controllers_yaml=None, ompl_planning_yaml=None, 
 
 
 def get_xarm_robot_description_parameters(
-    xacro_urdf_file=PathJoinSubstitution([FindPackageShare('xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
-    xacro_srdf_file=PathJoinSubstitution([FindPackageShare('xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
+    xacro_urdf_file=PathJoinSubstitution([FindPackageShare('custom_xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
+    xacro_srdf_file=PathJoinSubstitution([FindPackageShare('custom_xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
     urdf_arguments={},
     srdf_arguments={},
     arguments={}):
     urdf_arguments['ros2_control_plugin'] = urdf_arguments.get('ros2_control_plugin', 'uf_robot_hardware/UFRobotSystemHardware')
-    moveit_config_package_name = 'xarm_moveit_config'
+    moveit_config_package_name = 'custom_xarm_moveit_config'
     xarm_type = arguments.get('xarm_type', None)
     
     # xarm_description/launch/lib/robot_description_lib.py
-    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('xarm_description'), 'launch', 'lib', 'robot_description_lib.py'))
+    mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory('custom_xarm_description'), 'launch', 'lib', 'robot_description_lib.py'))
     get_xacro_file_content = getattr(mod, 'get_xacro_file_content')
-    
+
+    joint_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'joint_limits.yaml')
+    cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
+    joint_limits['cartesian_limits'] = cartesian_limits['cartesian_limits']
     return {
         'robot_description': get_xacro_file_content(
             xacro_file=xacro_urdf_file, 
@@ -87,6 +90,6 @@ def get_xarm_robot_description_parameters(
             xacro_file=xacro_srdf_file,
             arguments=srdf_arguments
         ),
-        'robot_description_planning': load_yaml(moveit_config_package_name, 'config', xarm_type, 'joint_limits.yaml'),
+        'robot_description_planning': joint_limits,
         'robot_description_kinematics': load_yaml(moveit_config_package_name, 'config', xarm_type, 'kinematics.yaml')
     }

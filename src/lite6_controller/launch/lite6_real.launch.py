@@ -154,9 +154,6 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
 
-    cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
-    robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']
-
     kinematics_yaml['kinematics_solver'] = 'kdl_kinematics_plugin/KDLKinematicsPlugin'
     kinematics_yaml['kinematics_solver_search_resolution'] = 0.005
     kinematics_yaml['kinematics_solver_timeout'] = 0.005
@@ -184,11 +181,11 @@ def launch_setup(context, *args, **kwargs):
             joint_limits_yaml['joint_limits'].update(gripper_joint_limits_yaml['joint_limits'])
 
     # FIX acceleration limits
-    for i in range(1,7):
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
-        #joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.5
-        #joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 2.5
-        joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 3.0
+    #for i in range(1,7):
+    #    joint_limits_yaml['joint_limits']['joint{}'.format(i)]['has_acceleration_limits'] = True
+    #    #joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 1.5
+    #    #joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 2.5
+    #    joint_limits_yaml['joint_limits']['joint{}'.format(i)]['max_acceleration'] = 3.0
 
     add_prefix_to_moveit_params = getattr(mod, 'add_prefix_to_moveit_params')
     add_prefix_to_moveit_params(
