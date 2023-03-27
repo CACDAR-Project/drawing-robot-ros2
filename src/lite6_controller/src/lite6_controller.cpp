@@ -72,6 +72,8 @@ public:
   rclcpp::TimerBase::SharedPtr trajectory_timer_;
   bool busy = false;
 
+  rclcpp::Publisher<moveit_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub;
+
   /**
    * TODO Use instead of MoveGroupInterface
    * https://industrial-training-master.readthedocs.io/en/foxy/_source/session4/ros2/0-Motion-Planning-CPP.html
@@ -123,6 +125,9 @@ public:
     //setting this lower seems to improve overall time and prevents robot from moving too fast
     //this->move_group.setMaxVelocityScalingFactor(1.0);
     this->move_group.setMaxVelocityScalingFactor(0.8);
+
+
+    trajectory_pub = this->create_publisher<moveit_msgs::msg::RobotTrajectory>("lite6_trajectory", 100);
 
     // Subscribe to target pose
     //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
@@ -441,7 +446,8 @@ public:
       RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
       RCLCPP_INFO(this->get_logger(), "Adding result to motion queue");
 
-      trajectory_queue.push(ts[0]);
+      //trajectory_queue.push(ts[0]);
+      this->trajectory_pub->publish(ts[0]);
 
       // Set move_group_state to the last state of planned trajectory (planning of next trajectory starts there)
       robot_trajectory::RobotTrajectory rt(move_group.getRobotModel());
@@ -471,6 +477,27 @@ public:
   }
 };
 
+class TrajectoryExecutor : public rclcpp::Node
+{
+  public:
+    //trajectory_pub = this->create_publisher<moveit_msgs::msg::RobotTrajectory>("lite6_trajectory", 10);
+    rclcpp::Subscription<moveit_msgs::msg::RobotTrajectory>::SharedPtr subscription;
+    moveit::planning_interface::MoveGroupInterface move_group;
+    TrajectoryExecutor()
+      : Node("lite6_trajectory_executor"),
+        move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP)
+    {
+      subscription = this->create_subscription<moveit_msgs::msg::RobotTrajectory>(
+        "lite6_trajectory", 100, std::bind(&TrajectoryExecutor::trajectory_callback, this, std::placeholders::_1));
+    }
+    void trajectory_callback(const moveit_msgs::msg::RobotTrajectory msg)
+    {
+      RCLCPP_INFO(this->get_logger(), "Received trajectory, executing");
+      move_group.execute(msg);
+      RCLCPP_INFO(this->get_logger(), "Finished executing trajectory");
+    }
+};
+
 /**
  * Starts lite6_controller
  */
@@ -491,6 +518,7 @@ int main(int argc, char ** argv)
   //rclcpp::executors::SingleThreadedExecutor executor;
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(lite6);
+  //executor.add_node(trajectory_executor);
   executor.spin();
 
   rclcpp::shutdown();

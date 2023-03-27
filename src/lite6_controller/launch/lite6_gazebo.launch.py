@@ -192,6 +192,17 @@ def launch_setup(context, *args, **kwargs):
             ],
         ),
         Node(
+            package="lite6_controller",
+            executable="lite6_trajectory_executor",
+            output="log",
+            arguments=["--ros-args", "--log-level", log_level],
+            parameters=[
+                robot_description,
+                robot_description_semantic,
+                {"use_sim_time": use_sim_time},
+            ],
+        ),
+        Node(
             package="virtual_drawing_surface",
             executable="drawing_surface.py",
             output="log",

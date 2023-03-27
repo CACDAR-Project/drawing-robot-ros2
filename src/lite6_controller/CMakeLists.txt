@@ -44,6 +44,16 @@ ament_target_dependencies(lite6_controller
   "robot_controller"
   "moveit_ros_planning_interface"
   "robot_interfaces")
+add_executable(lite6_trajectory_executor src/lite6_trajectory_executor.cpp)
+ament_target_dependencies(lite6_trajectory_executor
+  "rclcpp"
+  "moveit"
+  "rclcpp_action"
+  "Eigen3"
+  "pilz_industrial_motion_planner"
+  "robot_controller"
+  "moveit_ros_planning_interface"
+  "robot_interfaces")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -52,6 +62,7 @@ endif()
 
 install(TARGETS
   lite6_controller
+  lite6_trajectory_executor
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
