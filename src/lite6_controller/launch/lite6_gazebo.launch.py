@@ -300,12 +300,8 @@ def launch_setup(context, *args, **kwargs):
         prefix=prefix.perform(context))
 
 
-    robot_description_parameters['cartesian_limits'] = {}
-    robot_description_parameters['cartesian_limits']['max_trans_vel'] = 1
-    robot_description_parameters['cartesian_limits']['max_trans_acc'] = 2.25
-    robot_description_parameters['cartesian_limits']['max_trans_dec'] = -5
-    robot_description_parameters['cartesian_limits']['max_rot_vel'] =  1.57
-
+    cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
+    robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']
 
     # Planning pipeline
     # https://github.com/AndrejOrsula/panda_moveit2_config/blob/master/launch/move_group_fake_control.launch.py

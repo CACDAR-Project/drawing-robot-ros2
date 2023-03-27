@@ -154,17 +154,15 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
 
-    robot_description_parameters['cartesian_limits'] = {}
-    robot_description_parameters['cartesian_limits']['max_trans_vel'] = 1
-    robot_description_parameters['cartesian_limits']['max_trans_acc'] = 2.25
-    robot_description_parameters['cartesian_limits']['max_trans_dec'] = -5
-    robot_description_parameters['cartesian_limits']['max_rot_vel'] =  1.57
+    cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
+    robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']
 
-    #kinematics_yaml['kinematics_solver'] = 'kdl_kinematics_plugin/KDLKinematicsPlugin'
-    #kinematics_yaml['kinematics_solver_search_resolution'] = 0.005
-    #kinematics_yaml['kinematics_solver_timeout'] = 0.005
-    #kinematics_yaml['kinematics_solver_attempts'] = 3
+    kinematics_yaml['kinematics_solver'] = 'kdl_kinematics_plugin/KDLKinematicsPlugin'
+    kinematics_yaml['kinematics_solver_search_resolution'] = 0.005
+    kinematics_yaml['kinematics_solver_timeout'] = 0.005
+    kinematics_yaml['kinematics_solver_attempts'] = 3
     kinematics_yaml['kinematics_solver_timeout'] = 10.0
+
     kinematics_yaml['kinematics_solver_attempts'] = 10
 
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
@@ -249,7 +247,8 @@ def launch_setup(context, *args, **kwargs):
             'planning_plugin': 'pilz_industrial_motion_planner/CommandPlanner',
             #'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
             'request_adapters': """default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-            "default_planner_config": "PTP",
+            #"default_planner_config": "PTP",
+            "default_planner_config": "LIN",
         }
     }
 
@@ -264,6 +263,7 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[
             robot_description_parameters,
+            #cartesian_limits,
             #ompl_planning_pipeline_config,
             pilz_planning_pipeline_config,
             move_group_capabilities,
