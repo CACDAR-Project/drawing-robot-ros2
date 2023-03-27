@@ -75,7 +75,7 @@ def launch_setup(context, *args, **kwargs):
     # robot description launch
     # xarm_description/launch/_robot_description.launch.py
     robot_description_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('xarm_description'), 'launch', '_robot_description.launch.py'])),
+        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare('custom_xarm_description'), 'launch', '_robot_description.launch.py'])),
         launch_arguments={
             'prefix': prefix,
             'hw_ns': hw_ns,
@@ -105,12 +105,12 @@ def launch_setup(context, *args, **kwargs):
 
     # robot_description_parameters
     # xarm_moveit_config/launch/lib/robot_moveit_config_lib.py
-    moveit_config_package_name = 'xarm_moveit_config'
+    moveit_config_package_name = 'custom_xarm_moveit_config'
     mod = load_python_launch_file_as_module(os.path.join(get_package_share_directory(moveit_config_package_name), 'launch', 'lib', 'robot_moveit_config_lib.py'))
     get_xarm_robot_description_parameters = getattr(mod, 'get_xarm_robot_description_parameters')
     robot_description_parameters = get_xarm_robot_description_parameters(
-        xacro_urdf_file=PathJoinSubstitution([FindPackageShare('xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
-        xacro_srdf_file=PathJoinSubstitution([FindPackageShare('xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
+        xacro_urdf_file=PathJoinSubstitution([FindPackageShare('custom_xarm_description'), 'urdf', 'xarm_device.urdf.xacro']),
+        xacro_srdf_file=PathJoinSubstitution([FindPackageShare('custom_xarm_moveit_config'), 'srdf', 'xarm.srdf.xacro']),
         urdf_arguments={
             'prefix': prefix,
             'hw_ns': hw_ns.perform(context).strip('/'),
