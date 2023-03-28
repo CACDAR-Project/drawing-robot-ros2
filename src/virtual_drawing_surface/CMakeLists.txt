@@ -40,6 +40,6 @@ endif()
 
 # Install directories
 #install(DIRECTORY launch rviz urdf worlds DESTINATION share/${PROJECT_NAME})
-install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+#install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()
