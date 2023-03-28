@@ -62,6 +62,7 @@ ros2 run robot_controller dummy_controller
 
 AxidrawController draws on the axidraw robot.
 Find the serial device in "/dev/", it is usually named "/dev/ttyACMX" where X is usually 0.
+Try a different serial port if the axidraw_controller continuously logs a message about failing to connect.
 ``` sh
 ros2 launch axidraw_controller axidraw_controller serial_port:=/dev/ttyACM0
 ```

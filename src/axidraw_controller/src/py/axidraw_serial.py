@@ -83,7 +83,8 @@ class AxidrawSerial(Node):
         self.status_srv = self.create_service(Status, 'axidraw_status', self.get_status)
 
         while not self.init_serial(port):
-            self.get_logger().error("Failed to connect to axidraw on port:{}".format(port))
+            self.get_logger().error("Failed to connect to axidraw on port:{}, retrying".format(port))
+        self.get_logger().info("Successfully connected to axidraw on port:{}".format(port))
 
         self.move_sub = self.create_subscription(Point, 'axidraw_move', self.move_callback, qos_profile=QoSProfile(depth=1))
         self.penup_sub = self.create_subscription(Empty, 'axidraw_penup', self.penup_callback, qos_profile=QoSProfile(depth=1))
