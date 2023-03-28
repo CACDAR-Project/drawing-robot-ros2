@@ -17,7 +17,7 @@ from launch.actions import OpaqueFunction
 def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time", default=True)
     log_level = LaunchConfiguration("log_level", default='info')
-    rviz_config = LaunchConfiguration('rviz_config', default=os.path.join(get_package_share_directory("draw_svg"), "rviz", "ign_moveit2_examples.rviz"))
+    rviz_config = LaunchConfiguration('rviz_config', default=os.path.join(get_package_share_directory("custom_xarm_description"), "rviz", "display.rviz"))
 
     prefix = LaunchConfiguration('prefix', default='')
     hw_ns = LaunchConfiguration('hw_ns', default='xarm')
