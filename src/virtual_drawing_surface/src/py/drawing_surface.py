@@ -73,7 +73,7 @@ class DrawingApp(tk.Tk):
     def draw(self,x,y,z):
         # putpixel is too slow
         #self.img.putpixel((int(x), int(y)), (255, 0, 0))
-        r = 4 # radius
+        r = 3 # radius
         for xp in range(max(0, x-r), min(self.width-1, x+r)):
             for yp in range(max(0, y-r), min(self.height-1, y+r)):
                 self.arr[xp,yp,0] = 0 #red
@@ -105,7 +105,7 @@ class DrawingApp(tk.Tk):
             #y = translate(p.y, -0.51, -0.3, 0, self.height)
 
             x = int(translate(p.y, -0.5, 0.5, 0, self.width))
-            y = int(translate(p.x, -0.3485, 0.1, 0, self.height))
+            y = int(translate(p.x, -0.2485, 0.1, 0, self.height))
 
             #x = bound(self.width - x, 0, self.width)
             #y = bound(self.height - y, 0, self.height)

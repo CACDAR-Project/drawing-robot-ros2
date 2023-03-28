@@ -60,7 +60,7 @@ DummyController echoes Motion messages to the terminal.
 ros2 run robot_controller dummy_controller
 ```
 
-AxidrawController draws on the axidraw robot
+AxidrawController draws on the axidraw robot.
 Find the serial device in "/dev/", it is usually named "/dev/ttyACMX" where X is usually 0.
 ``` sh
 ros2 launch axidraw_controller axidraw_controller serial_port:=/dev/ttyACM0

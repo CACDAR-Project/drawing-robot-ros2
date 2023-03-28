@@ -89,8 +89,8 @@ public:
   float xlim_upper = 0.305;
   float ylim_lower = -0.1475;
   float ylim_upper = 0.1475;
-  float zlim_lower = 0.210;
-  float zlim_upper = 0.218;
+  float zlim_lower = 0.1945;
+  float zlim_upper = 0.200;
 
   //bool moved = false;
   //
@@ -121,8 +121,8 @@ public:
     this->move_group.setMaxAccelerationScalingFactor(1.0);
 
     //setting this lower seems to improve overall time and prevents robot from moving too fast
-    //this->move_group.setMaxVelocityScalingFactor(1.0);
-    this->move_group.setMaxVelocityScalingFactor(0.8);
+    this->move_group.setMaxVelocityScalingFactor(1.0);
+    //this->move_group.setMaxVelocityScalingFactor(0.8);
 
     // Subscribe to target pose
     //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
@@ -237,7 +237,7 @@ public:
       mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
       //mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_velocity_scaling_factor = 0.7;
+      mpr.max_velocity_scaling_factor = 0.3;
       mpr.max_acceleration_scaling_factor = 0.4;
       //mpr.max_acceleration_scaling_factor = 0.1;
       mpr.allowed_planning_time = 10;
