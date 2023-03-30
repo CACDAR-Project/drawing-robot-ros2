@@ -34,6 +34,13 @@ If active changes are being made, run:
 bash .docker/devel.bash
 ```
 This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
+If using podman instead of docker using the following will allow the container to access `/dev/` which is needed by the axidraw robot. 
+``` sh
+sudo bash .docker/build.bash
+```
+``` sh
+sudo bash .docker/devel.bash
+```
 
 ## TODO Building locally
 
