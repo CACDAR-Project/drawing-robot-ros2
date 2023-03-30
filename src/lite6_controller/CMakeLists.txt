@@ -16,6 +16,8 @@ find_package(moveit REQUIRED)
 find_package(pilz_industrial_motion_planner REQUIRED)
 find_package(moveit_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(xarm_api REQUIRED)
+find_package(xarm_msgs REQUIRED)
 
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -45,6 +47,18 @@ ament_target_dependencies(lite6_controller
   "moveit_ros_planning_interface"
   "robot_interfaces")
 
+add_executable(lite6_calibration src/lite6_calibration.cpp)
+ament_target_dependencies(lite6_calibration
+  "xarm_msgs"
+  "rclcpp"
+  "moveit"
+  "rclcpp_action"
+  "Eigen3"
+  "pilz_industrial_motion_planner"
+  "robot_controller"
+  "moveit_ros_planning_interface"
+  "robot_interfaces")
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
@@ -52,6 +66,7 @@ endif()
 
 install(TARGETS
   lite6_controller
+  lite6_calibration
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
