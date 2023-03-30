@@ -64,7 +64,7 @@ AxidrawController draws on the axidraw robot.
 Find the serial device in "/dev/", it is usually named "/dev/ttyACMX" where X is usually 0.
 Try a different serial port if the axidraw_controller continuously logs a message about failing to connect.
 ``` sh
-ros2 launch axidraw_controller axidraw_controller serial_port:=/dev/ttyACM0
+ros2 launch axidraw_controller axidraw_controller.launch.py serial_port:=/dev/ttyACM0
 ```
 
 This starts the simulated lite6
@@ -88,6 +88,23 @@ Once a RobotController is running, simultaneously (using tmux or another termina
 ros2 run drawing_controller drawing_controller svg/test.svg
 ```
 This will draw the svg image given as the last argument.
+
+### tmux workflow
+lite6 interface: http://192.168.1.150:18333
+
+#### Raspberry pi
+On the raspberry pi run 
+``` sh
+./setup_ros.sh
+```
+This will open a tmux session with the necessary ros2 packages sourced.
+#### Docker container
+``` sh
+tmux
+```
+
+If actively
+
 
 ## SVG compatibility info
 Tested with SVG from the following programs
