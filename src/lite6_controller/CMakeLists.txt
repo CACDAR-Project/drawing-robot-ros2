@@ -50,6 +50,7 @@ ament_target_dependencies(lite6_controller
 add_executable(lite6_calibration src/lite6_calibration.cpp)
 ament_target_dependencies(lite6_calibration
   "xarm_msgs"
+  "xarm_api"
   "rclcpp"
   "moveit"
   "rclcpp_action"
