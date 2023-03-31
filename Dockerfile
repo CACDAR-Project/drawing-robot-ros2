@@ -75,7 +75,7 @@ RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" && \
     rm -rf ${WS_LOG_DIR}
 
 # Copy example svg images
-COPY ./svg svg
+COPY ./svg test-images
 
 ### Add workspace to the ROS entrypoint
 ### Source ROS workspace inside `~/.bashrc` to enable autocompletion

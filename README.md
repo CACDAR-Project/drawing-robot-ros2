@@ -34,13 +34,21 @@ If active changes are being made, run:
 bash .docker/devel.bash
 ```
 This will mount the host `drawing-robot-ros2` directory in the container at `src/drawing-robot-ros2`.
-If using podman instead of docker using the following will allow the container to access `/dev/` which is needed by the axidraw robot. 
+
+Optionally you can pass a directory to the container with
+``` sh
+bash .docker/run.bash -v PATH_TO_SVG:/ws/PATH_IN_CONTAINER:ro
+```
+
+#### Podman issues
+If using podman instead of docker, using the following will allow the container to access `/dev/` which is needed by the axidraw robot. 
 ``` sh
 sudo bash .docker/build.bash
 ```
 ``` sh
 sudo bash .docker/devel.bash
 ```
+Adding sudo may cause gazebo not to work, so it is recommended to use docker instead of podman.
 
 ## TODO Building locally
 
