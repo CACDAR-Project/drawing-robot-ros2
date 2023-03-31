@@ -115,7 +115,7 @@ class SVGPathParser():
             maxval = np.amax(np.absolute(control_points))
             #print('maxxv', maxval)
             #control_points = control_points / maxval #normalize values
-            n = 50
+            n = 1000
             curve = cf.bezier(control_points)
             lin = np.linspace(curve.start(0), curve.end(0), n)
             coordinates = curve(lin)
@@ -140,7 +140,7 @@ class SVGPathParser():
             nonlocal x
             nonlocal y
             control_points = np.array(control_points)
-            n = 50
+            n = 1000
             curve = cf.bezier(control_points, quadratic=True)
             lin = np.linspace(curve.start(0), curve.end(0), n)
             coordinates = curve(lin)
