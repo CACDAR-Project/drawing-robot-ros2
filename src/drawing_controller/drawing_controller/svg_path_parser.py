@@ -114,13 +114,13 @@ class SVGPathParser():
             #print('inpput', control_points)
             maxval = np.amax(np.absolute(control_points))
             #print('maxxv', maxval)
-            control_points = control_points / maxval #normalize values
-            n = 50
-            curve = cf.cubic_curve(control_points)
+            #control_points = control_points / maxval #normalize values
+            n = 500
+            curve = cf.bezier(control_points)
             lin = np.linspace(curve.start(0), curve.end(0), n)
             coordinates = curve(lin)
             coordinates = np.nan_to_num(coordinates)
-            coordinates = coordinates * maxval #denormalize values
+            #coordinates = coordinates * maxval #denormalize values
             coordinates = dropzeros(coordinates)
             #self.logger.info("Appending curve points: {}".format(coordinates))
             #print(coordinates)
