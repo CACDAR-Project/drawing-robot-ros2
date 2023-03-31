@@ -162,7 +162,7 @@ class AxidrawController : public RobotController
         this->penup_pub->publish(std_msgs::msg::Empty());
       else
       {
-        this->pendown_pub->publish(std_msgs::msg::Empty());
+        //this->pendown_pub->publish(std_msgs::msg::Empty());
         while (i + count + 1 < points.size() && points[i + count + 1].z <= 0)
         {
           count++;

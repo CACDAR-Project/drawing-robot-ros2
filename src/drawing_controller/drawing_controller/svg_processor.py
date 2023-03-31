@@ -174,7 +174,7 @@ class SVGProcessor():
     def remove_redundant(self, motion):
         # Remove points that are too close to the previous point, specified by the tolerance
         mm = []
-        tolerance = 0.001
+        tolerance = 0.0001
         prev = (-1, -1, 0)
         for i, p in enumerate(motion):
             x = p[0]
@@ -215,6 +215,7 @@ class SVGProcessor():
                 tmp.append(list(p)[:-1])
             lastup = penup
 
+        # Handle anything left in tmp
         if (len(tmp) > 0):
             out += sf(tmp)
 

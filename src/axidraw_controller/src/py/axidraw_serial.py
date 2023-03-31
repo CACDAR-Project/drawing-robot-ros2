@@ -42,6 +42,7 @@ class AxidrawSerial(Node):
     status = {
         "serial": "not ready",
         "motion": "waiting",
+        "pen": "up",
     }
 
     def init_serial(self, port):
@@ -63,6 +64,7 @@ class AxidrawSerial(Node):
         self.ad.update()                     # Process changes to options
         self.status["serial"] = "ready"
         self.status["motion"] = "ready"
+        self.status["pen"] = "up"
         return True
 
     def __init__(self):
@@ -166,7 +168,9 @@ class AxidrawSerial(Node):
 
         self.get_logger().info("Received penup: {}".format(msg))
 
-        self.ad.penup()
+        if self.status['pen'] == "down":
+            self.ad.penup()
+            self.status['pen'] = "up"
         self.set_ready()
 
     def pendown_callback(self, msg):
@@ -179,7 +183,9 @@ class AxidrawSerial(Node):
 
         self.get_logger().info("Received pendown: {}".format(msg))
 
-        self.ad.pendown()
+        if self.status['pen'] == "up":
+            self.ad.pendown()
+            self.status['pen'] = "down"
         self.set_ready()
 
     def stroke_callback(self, msg):
@@ -194,6 +200,7 @@ class AxidrawSerial(Node):
 
         path = [ [p.x,p.y] for p in msg.points ]
         self.ad.draw_path(path)
+        self.status['pen'] = "up"
         self.set_ready()
 
 
