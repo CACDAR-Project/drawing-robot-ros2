@@ -203,7 +203,7 @@ And the following SVG path commands are supported:
 | MoveTo                 |  M, m             |             |
 | LineTo                 |  L, l, H, h, V, v |             |
 | Cubic Bézier Curve     |  C, c, S, s       |             |
-| Quadratic Bézier Curve |                   | Q, q, T, t  |
+| Quadratic Bézier Curve |  Q, q             | T, t        |
 | Elliptical Arc Curve   |                   | A, a        |
 | ClosePath              |  Z, z             |             |
 

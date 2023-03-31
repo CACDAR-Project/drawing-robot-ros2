@@ -136,6 +136,20 @@ class SVGPathParser():
                 x = coordinates[-1][0]
                 y = coordinates[-1][1]
             return coordinates
+        def quadratic_bezier(control_points):
+            nonlocal x
+            nonlocal y
+            control_points = np.array(control_points)
+            n = 500
+            curve = cf.bezier(control_points, quadratic=True)
+            lin = np.linspace(curve.start(0), curve.end(0), n)
+            coordinates = curve(lin)
+            coordinates = np.nan_to_num(coordinates)
+            coordinates = dropzeros(coordinates)
+            if len(coordinates) > 0:
+                x = coordinates[-1][0]
+                y = coordinates[-1][1]
+            return coordinates
 
         while i < len(path):
             w = path[i]
@@ -208,7 +222,6 @@ class SVGPathParser():
             # Cubic Bézier Curve commands
             if (w == "C"):
                 while True:
-                    # https://github.com/sintef/Splipy/tree/master/examples
                     control_points = [(x,y),
                                       (getnum(),getnum()),
                                       (getnum(),getnum()),
@@ -221,7 +234,6 @@ class SVGPathParser():
                 continue
             if (w == "c"):
                 while True:
-                    # https://github.com/sintef/Splipy/tree/master/examples
                     control_points = [(x,y),
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum()),
@@ -238,9 +250,29 @@ class SVGPathParser():
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             # Quadratic Bézier Curve commands
             if (w == "Q"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    control_points = [(x,y),
+                                      (getnum(),getnum()),
+                                      (getnum(),getnum()),
+                                      (getnum(),getnum())]
+                    coordinates = quadratic_bezier(control_points)
+                    appendpoints(coordinates)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "q"):
-                self.logger.error("SVG path parser '{}' not implemented".format(w))
+                while True:
+                    control_points = [(x,y),
+                                      (x + getnum(), y + getnum()),
+                                      (x + getnum(), y + getnum()),
+                                      (x + getnum(), y + getnum())]
+                    coordinates = quadratic_bezier(control_points)
+                    appendpoints(coordinates)
+                    if not nextisnum():
+                        break
+                i += 1
+                continue
             if (w == "T"):
                 self.logger.error("SVG path parser '{}' not implemented".format(w))
             if (w == "t"):
