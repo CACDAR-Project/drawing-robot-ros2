@@ -66,6 +66,8 @@ class AxidrawSerial(Node):
         self.ad.options.accel = 100          # 100% speed
         self.ad.options.pen_rate_lower = 100 # 100% speed
         self.ad.options.pen_rate_raise = 100 # 100% speed
+        #self.ad.options.pen_delay_down = 50
+        #self.ad.options.pen_delay_up = 50
         self.ad.update()                     # Process changes to options
         self.status["serial"] = "ready"
         self.status["motion"] = "ready"

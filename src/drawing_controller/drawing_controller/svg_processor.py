@@ -198,7 +198,7 @@ class SVGProcessor():
         """
         # For RDP, Try an epsilon of 1.0 to start with. Other sensible values include 0.01, 0.001
         #epsilon = 0.009
-        epsilon = 0.0005
+        epsilon = 0.00005
 
         tmp = []
         out = []
