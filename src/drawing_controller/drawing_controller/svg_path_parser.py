@@ -253,7 +253,6 @@ class SVGPathParser():
                 while True:
                     control_points = [(x,y),
                                       (getnum(),getnum()),
-                                      (getnum(),getnum()),
                                       (getnum(),getnum())]
                     coordinates = quadratic_bezier(control_points)
                     appendpoints(coordinates)
@@ -264,7 +263,6 @@ class SVGPathParser():
             if (w == "q"):
                 while True:
                     control_points = [(x,y),
-                                      (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum()),
                                       (x + getnum(), y + getnum())]
                     coordinates = quadratic_bezier(control_points)
