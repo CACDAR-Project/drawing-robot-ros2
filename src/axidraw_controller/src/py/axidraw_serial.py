@@ -61,6 +61,11 @@ class AxidrawSerial(Node):
             return False
         self.ad.options.units = 2            # set working units to mm.
         self.ad.options.model = 2            # set model to AxiDraw V3/A3
+        self.ad.options.speed_pendown = 100  # 100% speed
+        self.ad.options.speed_penup = 100    # 100% speed
+        self.ad.options.accel = 100          # 100% speed
+        self.ad.options.pen_rate_lower = 100 # 100% speed
+        self.ad.options.pen_rate_raise = 100 # 100% speed
         self.ad.update()                     # Process changes to options
         self.status["serial"] = "ready"
         self.status["motion"] = "ready"
