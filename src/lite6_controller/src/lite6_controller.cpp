@@ -198,11 +198,11 @@ public:
       //mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
       //mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_velocity_scaling_factor = 0.3;
-      mpr.max_acceleration_scaling_factor = 0.3;
+      mpr.max_velocity_scaling_factor = 1.0;
+      mpr.max_acceleration_scaling_factor = 1.0;
       //mpr.max_acceleration_scaling_factor = 0.1;
       mpr.allowed_planning_time = 20;
-      mpr.max_cartesian_speed = 3; // m/s
+      //mpr.max_cartesian_speed = 2; // m/s
       //mpr.goal_constraints.position_constraints.header.frame_id = "world";
 
       // A tolerance of 0.01 m is specified in position
@@ -368,8 +368,17 @@ public:
 
   void executeTrajectoryFromQueue()
   {
-    if (busy || trajectory_queue.empty())
+    if (trajectory_queue.empty())
+    {
+      if (busy)
+        return;
+
+      busy = true;
+      //RCLCPP_INFO(this->get_logger(), "Getting robot state");
+      //move_group_state = move_group.getCurrentState(10);
+      busy = false;
       return;
+    }
     busy = true;
     RCLCPP_INFO(this->get_logger(), "Executing next trajectory from queue");
     move_group.execute(trajectory_queue.front());
