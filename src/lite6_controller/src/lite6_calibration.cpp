@@ -5,6 +5,15 @@
 #include <iostream>
 #include <string>
 
+// MoveIt
+#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
+
+
+const std::string MOVE_GROUP = "lite6";
+
+std::shared_ptr<rclcpp::Node> node;
 
 void exit_sig_handler(int signum)
 {
@@ -16,24 +25,31 @@ void wait()
 {
  do
  {
-   std::cout << '\n' << "Press a key to continue...";
+   std::cout << "Press a key to continue...";
  } while (std::cin.get() != '\n');
 }
 
-void println(std::string s) {
+void println(std::string s)
+{
   std::cout << s << std::endl;
 }
 
-void print_joints(std::vector<float> jnts) {
+void print_joints(std::vector<float> jnts)
+{
+    std::string out = "";
+    out = out + "{ ";
     for (auto i : jnts)
-      std::cout << i << std::endl;
+      out = out + std::to_string(i) + ", ";
+    out = out.substr(0, out.size()-2); //remove trailing comma
+    out = out + " }";
+    std::cout << out << std::endl;
 }
 
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     std::string hw_ns = "ufactory";
-    std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("lite6_calibration");
+    node = rclcpp::Node::make_shared("lite6_calibration");
     int ret;
 
     signal(SIGINT, exit_sig_handler);
@@ -55,52 +71,61 @@ int main(int argc, char **argv)
     client.set_state(0);
     rclcpp::sleep_for(std::chrono::seconds(2));
 
-    std::vector<float> jnt_drawing_pose = {-0.813972, -0.0103697, 0.554617, 3.09979, -0.627334, -0.397301, 0};
+    //std::vector<float> jnt_drawing_pose = { -0.975004, 0.0734182, 0.443928, 3.14102, -0.370552, -0.85577, 0 };
+    std::vector<float> jnt_drawing_pose = { -0.975008, 0.00889134, 0.453255, 3.1414, -0.444295, -0.85692, 0 } ;
 
     std::vector<float> jnt_pose = { 0, 0, 0, 0, 0, 0, 0 };
     client.get_servo_angle(jnt_pose);
-    println("Moving to start drawing pose");
-//XArmROSClient::set_servo_angle(const std::vector<fp32>& angles, fp32 speed, fp32 acc, fp32 mvtime, bool wait, fp32 timeout, fp32 radius)
-    client.set_servo_angle(jnt_drawing_pose, 1, 1, 1, true, 100, -1);
+
+    print_joints(jnt_pose);
+
+
+
     //client.set_servo_angle_j(jnt_drawing_pose, 1, 1, 100);
     //rclcpp::sleep_for(std::chrono::seconds(5));
 
 
+    // Compute position of pen from joint state
+    robot_model_loader::RobotModelLoader robot_model_loader(node);
+    const moveit::core::RobotModelPtr& kinematic_model = robot_model_loader.getModel();
+    moveit::core::RobotStatePtr kinematic_state(new moveit::core::RobotState(kinematic_model));
+    const moveit::core::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup(MOVE_GROUP);
+    std::string ee_link = "pen_link";
+
+    std::vector<double> jnts;
+    for (auto j : jnt_pose)
+        jnts.push_back(j);
+
+    jnts.resize(joint_model_group->getVariableNames().size());
+    kinematic_state->setJointGroupPositions(joint_model_group, jnts);
+
+    // from tutorial https://ros-planning.github.io/moveit_tutorials/doc/robot_model_and_robot_state/robot_model_and_robot_state_tutorial.html
+    // https://github.com/ros-planning/moveit_tutorials/blob/master/doc/robot_model_and_robot_state/src/robot_model_and_robot_state_tutorial.cpp
+    //robot_model_loader::RobotModelLoader robot_model_loader(node, "robot_description");
+
+    kinematic_state->setJointGroupPositions(joint_model_group, jnts);
+    // https://mycourses.aalto.fi/pluginfile.php/1433193/mod_resource/content/2/Intro_to_ROS_Eigen.pdf
+    const Eigen::Isometry3d& end_effector_state = kinematic_state->getGlobalLinkTransform(ee_link);
+
+    auto x = std::to_string(end_effector_state.translation().x());
+    auto y = std::to_string(end_effector_state.translation().y());
+    auto z = std::to_string(end_effector_state.translation().z());
+    //println("x for '" + ee_link + "': " + x);
+    //println("y for '" + ee_link + "': " + y);
+    println("z-offset value for '" + ee_link + "' (use this value for the current pen): " + z);
+
+
+    println("Moving to start drawing pose");
+    wait();
+    client.set_servo_angle(jnt_drawing_pose, 1, 1, 1, true, 100, -1);
+
 
     client.set_mode(0);
     client.set_state(0);
-    return 0;
 
-    client.set_mode(4);
-    client.set_state(0);
-    std::vector<float> jnt_v = { 1, 0, 0, 0, 0, 0, 0 };
-    ret = client.vc_set_joint_velocity(jnt_v);
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "velo_move_joint: %d", ret);
-    rclcpp::sleep_for(std::chrono::seconds(2));
-    jnt_v[0] = -1;
-    ret = client.vc_set_joint_velocity(jnt_v);
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "velo_move_joint: %d", ret);
-    rclcpp::sleep_for(std::chrono::seconds(2));
-    // stop
-    jnt_v[0] = 0;
-    ret = client.vc_set_joint_velocity(jnt_v);
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "velo_move_joint: %d", ret);
+    rclcpp::shutdown();
 
-    std::vector<float> line_v = { 1, 0, 0, 0, 0, 0};
-    client.set_mode(5);
-	client.set_state(0);
-    ret = client.vc_set_cartesian_velocity(line_v);
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "velo_move_line: %d", ret);
-    rclcpp::sleep_for(std::chrono::seconds(2));
-    line_v[0] = -1;
-    ret = client.vc_set_cartesian_velocity(line_v);
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "velo_move_line: %d", ret);
-    rclcpp::sleep_for(std::chrono::seconds(2));
-    // stop
-    line_v[0] = 0;
-    ret = client.vc_set_cartesian_velocity(line_v);
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "velo_move_line: %d", ret);
-
-    RCLCPP_INFO(rclcpp::get_logger("test_xarm_velo_move"), "test_xarm_velo_move over");
+    println("Done, ignore any errors after this");
+    wait();
     return 0;
 }
