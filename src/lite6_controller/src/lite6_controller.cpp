@@ -47,15 +47,6 @@ const std::string MOVE_GROUP = "lite6";
 
 using namespace std::chrono_literals;
 
-// MOTION PLANNING API
-// https://github.com/ros-planning/moveit2_tutorials/blob/humble/doc/examples/motion_planning_api/src/motion_planning_api_tutorial.cpp
-// https://moveit.picknik.ai/humble/doc/examples/motion_planning_api/motion_planning_api_tutorial.html
-// https://github.com/ros-planning/moveit2/blob/main/moveit_planners/pilz_industrial_motion_planner/src/move_group_sequence_service.cpp
-//
-//
-// USE
-// https://industrial-training-master.readthedocs.io/en/foxy/_source/session4/ros2/0-Motion-Planning-CPP.html
-
 /**
  * Controller for xArm Lite6, implementing RobotController
  */
@@ -92,17 +83,6 @@ public:
   float zlim_lower = 0.1945;
   float zlim_upper = 0.200;
 
-  //bool moved = false;
-  //
-  // TODO get pilz working
-  //std::unique_ptr<pilz_industrial_motion_planner::CommandListManager> command_list_manager_;
-  // command_list_manager_ = std::make_unique<pilz_industrial_motion_planner::CommandListManager>(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
-
-  /**
-   * CommandListManager, used to plan MotionSequenceRequest
-   */
-  //pilz_industrial_motion_planner::CommandListManager command_list_manager;
-  //pilz_industrial_motion_planner::CommandListManager command_list_manager(*std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
 
   /**
    * Constructor
@@ -110,24 +90,11 @@ public:
   Lite6Controller(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
     : RobotController(options),
       move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP)
-      //moveit_cpp_(std::shared_ptr<rclcpp::Node>(std::move(this))),
-      //planning_component_(MOVE_GROUP, moveit_cpp_),
-      //command_list_manager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel())
   {
-
-    //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(this->move_group.getNodeHandle(), this->move_group.getRobotModel());
-    //command_list_manager = new pilz_industrial_motion_planner::CommandListManager(std::shared_ptr<rclcpp::Node>(std::move(this)), this->move_group.getRobotModel());
-    // Use upper joint velocity and acceleration limits
     this->move_group.setMaxAccelerationScalingFactor(1.0);
-
-    //setting this lower seems to improve overall time and prevents robot from moving too fast
     this->move_group.setMaxVelocityScalingFactor(1.0);
     //this->move_group.setMaxVelocityScalingFactor(0.8);
 
-    // Subscribe to target pose
-    //target_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>("/target_pose", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::target_pose_callback, this, std::placeholders::_1));
-
-    //
     trajectory_timer_ = this->create_wall_timer(
       10ms, std::bind(&Lite6Controller::executeTrajectoryFromQueue, this));
 
@@ -135,18 +102,10 @@ public:
 
   void setup()
   {
-    //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(move_group.getNodeHandle());
     try
     {
-      //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(this->shared_from_this());
-      //moveit_cpp_ = std::make_shared<moveit_cpp::MoveItCpp>(move_group.getNodeHandle());
-      //planning_component_ = std::make_shared<moveit_cpp::PlanningComponent>(MOVE_GROUP, moveit_cpp_);
-      //
-
       planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(this->shared_from_this(),
                                                                                                "robot_description");
-      //RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Getting initial robot state");
-      //move_group.startStateMonitor(5);
 
       this->sequence_client_ =
         this->create_client<moveit_msgs::srv::GetMotionSequence>("plan_sequence_path");
@@ -217,11 +176,12 @@ public:
   /**
    *
    */
-  moveit_msgs::msg::MotionSequenceRequest createMotionSequenceRequest(const std::vector<geometry_msgs::msg::PoseStamped> *path)
+  moveit_msgs::msg::MotionSequenceRequest createMotionSequenceRequest(const std::vector<geometry_msgs::msg::PoseStamped> *path, std::string planner_id)
   {
     moveit_msgs::msg::MotionSequenceRequest msr = moveit_msgs::msg::MotionSequenceRequest();
     //waypoints.push_back(move_group.getCurrentPose().pose);
     std::string ee_link = move_group.getLinkNames().back();
+    //std::string ee_link = "pen_link";
     RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
     geometry_msgs::msg::Point previous_point;
     //previous_point.point.x = -1.0;
@@ -233,14 +193,15 @@ public:
       moveit_msgs::msg::MotionSequenceItem msi = moveit_msgs::msg::MotionSequenceItem();
 
       planning_interface::MotionPlanRequest mpr = planning_interface::MotionPlanRequest();
+      mpr.planner_id = planner_id;
       //mpr.planner_id = "PTP";
-      mpr.planner_id = "LIN";
+      //mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
       //mpr.max_velocity_scaling_factor = 1.0;
       mpr.max_velocity_scaling_factor = 0.3;
-      mpr.max_acceleration_scaling_factor = 0.4;
+      mpr.max_acceleration_scaling_factor = 0.3;
       //mpr.max_acceleration_scaling_factor = 0.1;
-      mpr.allowed_planning_time = 10;
+      mpr.allowed_planning_time = 20;
       mpr.max_cartesian_speed = 3; // m/s
       //mpr.goal_constraints.position_constraints.header.frame_id = "world";
 
@@ -297,6 +258,11 @@ public:
     moveit::core::robotStateToRobotStateMsg(*move_group_state, state_msg);
     msr.items.front().req.start_state = state_msg;
     return msr;
+  }
+
+  moveit_msgs::msg::MotionSequenceRequest createMotionSequenceRequest(const std::vector<geometry_msgs::msg::PoseStamped> *path)
+  {
+    return createMotionSequenceRequest(path, "LIN");
   }
 
   /**
@@ -411,6 +377,103 @@ public:
     busy = false;
   }
 
+  moveit_msgs::msg::RobotTrajectory sendRequest(moveit_msgs::msg::MotionSequenceRequest msr)
+  {
+    auto req = std::make_shared<moveit_msgs::srv::GetMotionSequence::Request>();
+    req->request = msr;
+    RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
+    auto res = sequence_client_->async_send_request(req);
+
+    auto ts = res.get()->response.planned_trajectories;
+
+    // Set move_group_state to the last state of planned trajectory (planning of next trajectory starts there)
+
+    if (ts.empty())
+    {
+      moveit_msgs::msg::RobotTrajectory t;
+      return t;
+    }
+
+
+    return ts[0];
+  }
+
+  void setMoveGroupState(moveit_msgs::msg::RobotTrajectory t)
+  {
+
+    if (t.joint_trajectory.points.empty())
+    {
+      RCLCPP_ERROR(this->get_logger(), "TRAJECTORY IS EMPTY");
+      return;
+    }
+
+    robot_trajectory::RobotTrajectory rt(move_group.getRobotModel());
+    rt.setRobotTrajectoryMsg(*move_group_state, t);
+    move_group_state = rt.getLastWayPointPtr();
+  }
+
+  void pathToTrajectory(const std::vector<geometry_msgs::msg::PoseStamped> *path, std::vector<moveit_msgs::msg::RobotTrajectory> *ts)
+  {
+    std::vector<geometry_msgs::msg::PoseStamped> penup = {};
+    std::vector<geometry_msgs::msg::PoseStamped> tail = {};
+    bool up = true;
+    if (!path)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Received null pointer for path");
+      return;
+    }
+    for (auto p : *path)
+    {
+      if (p.pose.position.z > 0)
+        up = false;
+      if (up)
+        //penup->push_back(p);
+        penup.push_back(p);
+      else
+      {
+        up = false;
+        //tail->push_back(p);
+        tail.push_back(p);
+      }
+    }
+
+    if (!penup.empty())
+    {
+      auto msr = createMotionSequenceRequest(&penup, "PTP");
+      RCLCPP_ERROR(this->get_logger(), "Created MSR for penup");
+      if (msr.items.empty())
+      {
+        RCLCPP_ERROR(this->get_logger(), "MSR EMPTY");
+        return;
+      }
+      ts->push_back(sendRequest(msr));
+      //planAndLogOffset(&penup);
+      setMoveGroupState(ts->back());
+
+    }
+    else
+    {
+      RCLCPP_ERROR(this->get_logger(), "Penup path is empty, all motions will be LIN");
+    }
+    if (!tail.empty())
+    {
+      auto msr = createMotionSequenceRequest(&tail, "LIN");
+      RCLCPP_ERROR(this->get_logger(), "Created MSR for tail");
+      if (msr.items.empty())
+      {
+        RCLCPP_ERROR(this->get_logger(), "MSR EMPTY");
+        return;
+      }
+      ts->push_back(sendRequest(msr));
+      //planAndLogOffset(&tail);
+      setMoveGroupState(ts->back());
+    }
+    else
+    {
+      RCLCPP_ERROR(this->get_logger(), "Path was empty, no trajectories created");
+    }
+  }
+
   /**
    * Callback that executes path on robot
    */
@@ -423,37 +486,33 @@ public:
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();
 
-    auto msr = createMotionSequenceRequest(&goal->motion.path);
-    RCLCPP_INFO(this->get_logger(), "Created MSR");
+    std::vector<moveit_msgs::msg::RobotTrajectory> ts;
+    pathToTrajectory(&goal->motion.path, &ts);
 
-    //planAndLogOffset(&goal->motion.path);
+    long unsigned int n = 0;
 
-    RCLCPP_INFO(this->get_logger(), "Creating req");
-    auto req = std::make_shared<moveit_msgs::srv::GetMotionSequence::Request>();
-    RCLCPP_INFO(this->get_logger(), "Setting msr request");
-    req->request = msr;
-    RCLCPP_INFO(this->get_logger(), "Sending request to sequence service");
-    auto res = sequence_client_->async_send_request(req);
-    RCLCPP_INFO(this->get_logger(), "Waiting for result");
-    auto ts = res.get()->response.planned_trajectories;
+    RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
+    for (auto t : ts)
+    {
+      RCLCPP_INFO(this->get_logger(), "Adding result to motion queue");
+      if (t.joint_trajectory.points.empty())
+      {
+        RCLCPP_ERROR(this->get_logger(), "TRAJECTORY IS EMPTY");
+        continue;
+      }
+      trajectory_queue.push(t);
+      n++;
+    }
+
     std::string status = "";
-    if (ts.size() > 0)
+    if (n == ts.size())
     {
       status = "success";
-      RCLCPP_INFO(this->get_logger(), "Got %ld trajectories", ts.size());
-      RCLCPP_INFO(this->get_logger(), "Adding result to motion queue");
-
-      trajectory_queue.push(ts[0]);
-
-      // Set move_group_state to the last state of planned trajectory (planning of next trajectory starts there)
-      robot_trajectory::RobotTrajectory rt(move_group.getRobotModel());
-      rt.setRobotTrajectoryMsg(*move_group_state, ts[0]);
-      move_group_state = rt.getLastWayPointPtr();
-
       status = status + "," + pointsToString(&goal->motion.path,0,0,0);
       appendLineToFile("OUTPUT.csv", status);
 
       result->result = "success";
+
       goal_handle->succeed(result);
       RCLCPP_INFO(this->get_logger(), "Goal succeeded");
       return;
