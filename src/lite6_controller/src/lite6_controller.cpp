@@ -80,8 +80,9 @@ public:
   float xlim_upper = 0.305;
   float ylim_lower = -0.1475;
   float ylim_upper = 0.1475;
-  float zlim_lower = 0.1945;
-  float zlim_upper = 0.200;
+  //float zlim_lower = 0.1945;
+  float zlim_lower = 0.207493;
+  float zlim_upper = zlim_lower + 0.01;
 
 
   /**
@@ -180,8 +181,8 @@ public:
   {
     moveit_msgs::msg::MotionSequenceRequest msr = moveit_msgs::msg::MotionSequenceRequest();
     //waypoints.push_back(move_group.getCurrentPose().pose);
-    std::string ee_link = move_group.getLinkNames().back();
-    //std::string ee_link = "pen_link";
+    //std::string ee_link = move_group.getLinkNames().back();
+    std::string ee_link = "pen_link";
     RCLCPP_INFO(this->get_logger(), "Got ee_link: %s", ee_link.c_str());
     geometry_msgs::msg::Point previous_point;
     //previous_point.point.x = -1.0;
@@ -199,7 +200,7 @@ public:
       mpr.group_name = move_group.getName();
       //mpr.max_velocity_scaling_factor = 1.0;
       mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_acceleration_scaling_factor = 1.0;
+      mpr.max_acceleration_scaling_factor = 0.8;
       //mpr.max_acceleration_scaling_factor = 0.1;
       mpr.allowed_planning_time = 20;
       //mpr.max_cartesian_speed = 2; // m/s
