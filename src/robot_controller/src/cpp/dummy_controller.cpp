@@ -23,7 +23,7 @@ class DummyController : public RobotController
   virtual void executePath(const std::shared_ptr<rclcpp_action::ServerGoalHandle<ExecuteMotion>> goal_handle)
   {
     RCLCPP_INFO(this->get_logger(), "Executing goal");
-    rclcpp::Rate loop_rate(20);
+    rclcpp::Rate loop_rate(100);
     const auto goal = goal_handle->get_goal();
     auto feedback = std::make_shared<robot_interfaces::action::ExecuteMotion::Feedback>();
     auto result = std::make_shared<robot_interfaces::action::ExecuteMotion::Result>();

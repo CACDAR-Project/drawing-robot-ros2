@@ -11,7 +11,7 @@ class SVGPathParser():
         self.map_point = map_point
 
     def tokenize(self, pathstr):
-        self.logger.info("Tokenizing path :'{}...' with {} characters".format(pathstr[:40], len(pathstr)))
+        self.logger.debug("Tokenizing path :'{}...' with {} characters".format(pathstr[:40], len(pathstr)))
         path = []
         i = 0
         while i < len(pathstr):
@@ -53,7 +53,7 @@ class SVGPathParser():
             Returns:
                     primitive_fn ():
         '''
-        self.logger.info("Parsing path :'{}...' with {} tokens".format(path[:20], len(path)))
+        self.logger.debug("Parsing path :'{}...' with {} tokens".format(path[:20], len(path)))
         x = 0.0
         y = 0.0
         i = 0
@@ -289,5 +289,5 @@ class SVGPathParser():
             self.logger.error("SVG path parser panic mode at '{}'".format(w))
 
             i += 1
-        self.logger.info("Finished parsing path :'{}...' with {} points".format(output[:3], len(output)))
+        self.logger.debug("Finished parsing path :'{}...' with {} points".format(output[:3], len(output)))
         return output

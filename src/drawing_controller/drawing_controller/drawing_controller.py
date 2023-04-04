@@ -17,6 +17,8 @@ from robot_interfaces.msg import Motion
 import sys
 from copy import deepcopy
 
+import time
+
 from drawing_controller.svg_processor import SVGProcessor
 
 def quaternion_from_euler(ai, aj, ak):
@@ -61,12 +63,16 @@ class DrawingController(Node):
     def __init__(self, svgpath):
         super().__init__('drawing_controller')
         #self.publisher_ = self.create_publisher(PoseStamped, '/target_pose', 10)
-        timer_period = 1.0  # seconds
+        timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
         self.busy = False
 
         self._action_client = ActionClient(self, ExecuteMotion, 'execute_motion')
+
+        self.results = {}
+
+        self.svg_start_time = time.time()
 
         xml = ET.parse(svgpath)
         svg = xml.getroot()
@@ -85,7 +91,10 @@ class DrawingController(Node):
 
         self.svg_processor = SVGProcessor(self.get_logger())
         self.svg = self.svg_processor.process_svg(svgpath)
-        self.get_logger().info('Ready to begin executing motions')
+
+        self.results['svg processing time'] = self.timestr(time.time() - self.svg_start_time)
+        self.start_time = time.time()
+        self.get_logger().info('SVG processing finished, executing motions')
 
     def send_goal(self, motion):
         self.busy = True
@@ -101,22 +110,23 @@ class DrawingController(Node):
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected :(')
+            self.get_logger().debug('Goal rejected :(')
             return
 
-        self.get_logger().info('Goal accepted :)')
+        self.get_logger().debug('Goal accepted :)')
 
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
         result = future.result().result
-        self.get_logger().info('Result: {0}'.format(result))
+        self.results.update({ result.result: self.results.get(result.result, 0) + 1 })
+        self.get_logger().info('Result: {0}'.format(result.result))
         self.busy = False
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
-        self.get_logger().info('Received feedback: {0}'.format(feedback))
+        self.get_logger().debug('Received feedback: {0}'.format(feedback))
 
     def append_points(self, motion, points):
         for point in points:
@@ -135,17 +145,23 @@ class DrawingController(Node):
             ps.pose = p
             motion.path.append(ps)
 
+    def timestr(self, t):
+        return time.strftime("%H:%M:%S", time.gmtime(t))
+
     def timer_callback(self):
         if self.busy:
             return
         if self.i >= len(self.svg):
+            self.results['total time'] = self.timestr(time.time() - self.svg_start_time)
+            self.results['drawing time'] = self.timestr(time.time() - self.start_time)
             self.get_logger().info('Finished executing all motions from SVG')
+            self.get_logger().info('Results: {}'.format(self.results))
             exit()
         next_motion = self.svg[self.i]
         motion = Motion()
         self.append_points(motion, next_motion)
         self.i = self.i + 1
-        self.get_logger().info('Executing motion: {}...'.format(motion.path[:10]))
+        self.get_logger().info('Executing motion: {}/{}'.format(self.i, len(self.svg)))
         self.send_goal(motion)
 
 
