@@ -19,6 +19,7 @@ def launch_setup(context, *args, **kwargs):
     log_level = LaunchConfiguration("log_level", default='info')
     rviz_config = LaunchConfiguration('rviz_config', default=os.path.join(get_package_share_directory("custom_xarm_description"), "rviz", "display.rviz"))
 
+
     prefix = LaunchConfiguration('prefix', default='')
     hw_ns = LaunchConfiguration('hw_ns', default='xarm')
     limited = LaunchConfiguration('limited', default=False)
@@ -189,6 +190,7 @@ def launch_setup(context, *args, **kwargs):
                 robot_description,
                 robot_description_semantic,
                 {"use_sim_time": use_sim_time},
+                lite6_config,
             ],
         ),
         Node(
@@ -262,6 +264,8 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
+
+    lite6_config = load_yaml('lite6_controller', 'config', 'config.yaml')
 
     #cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
     #robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']
