@@ -91,6 +91,7 @@ class DrawingController(Node):
 
         self.svg_processor = SVGProcessor(self.get_logger())
         self.svg = self.svg_processor.process_svg(svgpath)
+        self.results['svg path'] = svgpath
 
         self.results['svg processing time'] = self.timestr(time.time() - self.svg_start_time)
         self.start_time = time.time()
