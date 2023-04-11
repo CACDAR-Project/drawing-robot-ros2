@@ -81,7 +81,7 @@ public:
   float ylim_lower = -0.1475;
   float ylim_upper = 0.1475;
   //float zlim_lower = 0.1945;
-  float zlim_lower = 0.207493;
+  float zlim_lower = 0.188611;
   float zlim_upper = zlim_lower + 0.01;
 
 
@@ -199,8 +199,8 @@ public:
       //mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
       //mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_acceleration_scaling_factor = 0.8;
+      mpr.max_velocity_scaling_factor = 0.8;
+      mpr.max_acceleration_scaling_factor = 0.9;
       //mpr.max_acceleration_scaling_factor = 0.1;
       mpr.allowed_planning_time = 20;
       //mpr.max_cartesian_speed = 2; // m/s
