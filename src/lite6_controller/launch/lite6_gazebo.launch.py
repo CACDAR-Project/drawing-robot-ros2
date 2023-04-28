@@ -2,6 +2,7 @@
 """Launch Python example for following a target"""
 
 import os
+import yaml
 from ament_index_python import get_package_share_directory
 from launch.launch_description_sources import load_python_launch_file_as_module
 from launch import LaunchDescription
@@ -54,6 +55,8 @@ def launch_setup(context, *args, **kwargs):
     controllers_name = LaunchConfiguration('controllers_name', default='fake_controllers')
     moveit_controller_manager_key = LaunchConfiguration('moveit_controller_manager_key', default='moveit_simple_controller_manager')
     moveit_controller_manager_value = LaunchConfiguration('moveit_controller_manager_value', default='moveit_simple_controller_manager/MoveItSimpleControllerManager')
+
+    config = LaunchConfiguration("config", default=PathJoinSubstitution([FindPackageShare('lite6_controller'), 'config', 'config.yaml']))
 
     # robot moveit common launch
     # xarm_moveit_config/launch/_robot_moveit_common.launch.py
@@ -190,7 +193,6 @@ def launch_setup(context, *args, **kwargs):
                 robot_description,
                 robot_description_semantic,
                 {"use_sim_time": use_sim_time},
-                lite6_config,
             ],
         ),
         Node(
@@ -265,7 +267,11 @@ def launch_setup(context, *args, **kwargs):
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
-    lite6_config = load_yaml('lite6_controller', 'config', 'config.yaml')
+    robotcontroller_config = config.perform(context)
+    with open(robotcontroller_config, 'r') as f:
+        lite6_config = yaml.safe_load(f)
+        print(f'Loaded configuration: {lite6_config}')
+    robot_description_parameters.update(lite6_config['/robot_controller']['ros__parameters'])
 
     #cartesian_limits = load_yaml(moveit_config_package_name, 'config', xarm_type, 'cartesian_limits.yaml')
     #robot_description_parameters['robot_description_planning']['cartesian_limits'] = cartesian_limits['cartesian_limits']

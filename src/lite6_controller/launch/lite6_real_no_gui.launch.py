@@ -1,4 +1,5 @@
 import os
+import yaml
 from launch import LaunchDescription
 from launch.actions import OpaqueFunction, IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -55,6 +56,8 @@ def launch_setup(context, *args, **kwargs):
 
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
     log_level = LaunchConfiguration("log_level", default='warn')
+
+    config = LaunchConfiguration("config", default=PathJoinSubstitution([FindPackageShare('lite6_controller'), 'config', 'config.yaml']))
 
     # # robot driver launch
     # # xarm_api/launch/_robot_driver.launch.py
@@ -156,8 +159,11 @@ def launch_setup(context, *args, **kwargs):
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
-    #lite6_config = load_yaml('lite6_controller', 'config', 'config.yaml')
-    lite6_config = os.path.join('lite6_controller', 'config', 'config.yaml')
+    robotcontroller_config = config.perform(context)
+    with open(robotcontroller_config, 'r') as f:
+        lite6_config = yaml.safe_load(f)
+        print(f'Loaded configuration: {lite6_config}')
+    robot_description_parameters.update(lite6_config['/robot_controller']['ros__parameters'])
 
     # FIX acceleration limits
     #for i in range(1,7):
@@ -346,7 +352,6 @@ def launch_setup(context, *args, **kwargs):
                 #robot_description_parameters['robot_description_kinematics'],
                 robot_description_parameters,
                 {"use_sim_time": use_sim_time},
-                lite6_config,
             ],
         ),
     ]
