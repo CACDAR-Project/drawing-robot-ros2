@@ -79,22 +79,22 @@ AxidrawController draws on the axidraw robot.
 Find the serial device in "/dev/", it is usually named "/dev/ttyACMX" where X is usually 0.
 Try a different serial port if the axidraw_controller continuously logs a message about failing to connect.
 ``` sh
-ros2 launch axidraw_controller axidraw_controller.launch.py serial_port:=/dev/ttyACM0
+ros2 launch axidraw_controller axidraw_controller.launch.py serial_port:=/dev/ttyACM0 config:=./config.yaml
 ```
 
 This starts the simulated lite6
 ``` sh
-ros2 launch lite6_controller lite6_gazebo.launch.py
+ros2 launch lite6_controller lite6_gazebo.launch.py config:=./config.yaml
 ```
 
 This runs the real lite6
 ``` sh
-ros2 launch lite6_controller lite6_real.launch.py
+ros2 launch lite6_controller lite6_real.launch.py config:=./config.yaml
 ```
 
 This runs the real lite6 without Rviz (can be run on headless device over ssh)
 ``` sh
-ros2 launch lite6_controller lite6_real_no_gui.launch.py
+ros2 launch lite6_controller lite6_real_no_gui.launch.py config:=./config.yaml
 ```
 
 ### DrawingController
