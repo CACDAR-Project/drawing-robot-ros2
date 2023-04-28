@@ -37,9 +37,9 @@ This will mount the host `drawing-robot-ros2` directory in the container at `src
 
 Optionally you can pass a directory to the container with
 ``` sh
-bash .docker/run.bash -v PATH_TO_SVG:/svg:ro
+bash .docker/run.bash -v PATH_TO_SVG:/svg:rw
 ```
-This will mount the given path to /svg in read-only mode in the container.
+This will mount the given path to /svg in read-write mode in the container.
 
 
 #### Podman issues

@@ -27,6 +27,9 @@ RUN apt-get update && \
     apt-get install -yq python3-pil.imagetk && \
     apt-get install -yq ros-${ROS_DISTRO}-pilz-industrial-motion-planner && \
     apt-get install -yq tmux && \
+    apt-get install -yq nano && \
+    apt-get install -yq vim && \
+    apt-get install -yq less && \
     apt-get install -yq python3-pip && \
     apt-get install -yq ros-${ROS_DISTRO}-desktop && \
     apt-get install -yq ros-${ROS_DISTRO}-rclcpp-components
