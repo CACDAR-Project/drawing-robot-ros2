@@ -8,5 +8,5 @@
     axidraw_pen_pos_up: 60
     axidraw_pen_rate_lower: 50
     axidraw_pen_rate_raise: 75
-    axidraw_speed_pendown: 100
-    axidraw_speed_penup: 100
+    axidraw_speed_pendown: 50
+    axidraw_speed_penup: 50

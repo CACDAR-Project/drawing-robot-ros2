@@ -65,7 +65,7 @@ class AxidrawSerial(Node):
         self.ad.options.speed_pendown = self.get_parameter('axidraw_speed_pendown').get_parameter_value().integer_value # Maximum XY speed when the pen is down (plotting).
         self.ad.options.speed_penup = self.get_parameter('axidraw_speed_penup').get_parameter_value().integer_value # Maximum XY speed when the pen is up.
         self.ad.options.accel = self.get_parameter('axidraw_accel').get_parameter_value().integer_value  # Relative acceleration/deceleration speed.
-        self.get_logger().error('accel:{}'.format(self.get_parameter('axidraw_accel').get_parameter_value().integer_value))
+        #self.get_logger().error('accel:{}'.format(self.get_parameter('axidraw_accel').get_parameter_value().integer_value))
         self.ad.options.pen_pos_down = self.get_parameter('axidraw_pen_pos_down').get_parameter_value().integer_value #Pen height when the pen is down (plotting).
         self.ad.options.pen_pos_up = self.get_parameter('axidraw_pen_pos_up').get_parameter_value().integer_value #Pen height when the pen is up.
         self.ad.options.pen_rate_lower = self.get_parameter('axidraw_pen_rate_lower').get_parameter_value().integer_value #  Speed of lowering the pen-lift motor.
