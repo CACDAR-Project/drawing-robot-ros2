@@ -15,6 +15,7 @@ from launch.events import Shutdown
 
 
 def launch_setup(context, *args, **kwargs):
+
     robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.150')
     report_type = LaunchConfiguration('report_type', default='normal')
     prefix = LaunchConfiguration('prefix', default='')
@@ -154,6 +155,9 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml = robot_description_parameters['robot_description_kinematics']
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
+
+    #lite6_config = load_yaml('lite6_controller', 'config', 'config.yaml')
+    lite6_config = os.path.join('lite6_controller', 'config', 'config.yaml')
 
     # FIX acceleration limits
     #for i in range(1,7):
@@ -342,6 +346,7 @@ def launch_setup(context, *args, **kwargs):
                 #robot_description_parameters['robot_description_kinematics'],
                 robot_description_parameters,
                 {"use_sim_time": use_sim_time},
+                lite6_config,
             ],
         ),
     ]
