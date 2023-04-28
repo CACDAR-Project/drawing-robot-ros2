@@ -6,8 +6,19 @@
     lite6_y_limit_upper: 0.1475
 
     lite6_z_lift_amount: 0.01
-    lite6_z_offset: 0.1475
+    lite6_z_offset: 0.201942
 
     lite6_blend_radius: 0.0
     lite6_max_velocity_scaling_factor: 1.0
     lite6_max_acceleration_scaling_factor: 0.9
+
+    axidraw_accel: 100
+    axidraw_const_speed: false
+    axidraw_pen_delay_down: 0
+    axidraw_pen_delay_up: 0
+    axidraw_pen_pos_down: 40
+    axidraw_pen_pos_up: 60
+    axidraw_pen_rate_lower: 50
+    axidraw_pen_rate_raise: 75
+    axidraw_speed_pendown: 100
+    axidraw_speed_penup: 100

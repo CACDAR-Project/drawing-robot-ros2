@@ -61,13 +61,18 @@ class AxidrawSerial(Node):
             return False
         self.ad.options.units = 2            # set working units to mm.
         self.ad.options.model = 2            # set model to AxiDraw V3/A3
-        self.ad.options.speed_pendown = 100  # 100% speed
-        self.ad.options.speed_penup = 100    # 100% speed
-        self.ad.options.accel = 100          # 100% speed
-        self.ad.options.pen_rate_lower = 100 # 100% speed
-        self.ad.options.pen_rate_raise = 100 # 100% speed
-        #self.ad.options.pen_delay_down = 50
-        #self.ad.options.pen_delay_up = 50
+
+        self.ad.options.speed_pendown = self.get_parameter('axidraw_speed_pendown').get_parameter_value().integer_value # Maximum XY speed when the pen is down (plotting).
+        self.ad.options.speed_penup = self.get_parameter('axidraw_speed_penup').get_parameter_value().integer_value # Maximum XY speed when the pen is up.
+        self.ad.options.accel = self.get_parameter('axidraw_accel').get_parameter_value().integer_value  # Relative acceleration/deceleration speed.
+        self.get_logger().error('accel:{}'.format(self.get_parameter('axidraw_accel').get_parameter_value().integer_value))
+        self.ad.options.pen_pos_down = self.get_parameter('axidraw_pen_pos_down').get_parameter_value().integer_value #Pen height when the pen is down (plotting).
+        self.ad.options.pen_pos_up = self.get_parameter('axidraw_pen_pos_up').get_parameter_value().integer_value #Pen height when the pen is up.
+        self.ad.options.pen_rate_lower = self.get_parameter('axidraw_pen_rate_lower').get_parameter_value().integer_value #  Speed of lowering the pen-lift motor.
+        self.ad.options.pen_rate_raise = self.get_parameter('axidraw_pen_rate_raise').get_parameter_value().integer_value #Speed of raising the pen-lift motor.
+        self.ad.options.const_speed = self.get_parameter('axidraw_const_speed').get_parameter_value().bool_value #Option: Use constant speed when pen is down.
+        self.ad.options.pen_delay_down = self.get_parameter('axidraw_pen_delay_down').get_parameter_value().integer_value #Added delay after lowering pen.
+        self.ad.options.pen_delay_up = self.get_parameter('axidraw_pen_delay_up').get_parameter_value().integer_value #Added delay after raising pen.
         self.ad.update()                     # Process changes to options
         self.status["serial"] = "ready"
         self.status["motion"] = "ready"
@@ -88,6 +93,17 @@ class AxidrawSerial(Node):
 
         self.declare_parameter('serial_port', '/dev/ttyACM0')
         port = self.get_parameter('serial_port').get_parameter_value().string_value
+
+        self.declare_parameter('axidraw_speed_pendown', 100)
+        self.declare_parameter('axidraw_speed_penup', 100)
+        self.declare_parameter('axidraw_accel', 100)
+        self.declare_parameter('axidraw_pen_pos_down', 40)
+        self.declare_parameter('axidraw_pen_pos_up', 60)
+        self.declare_parameter('axidraw_pen_rate_lower', 50)
+        self.declare_parameter('axidraw_pen_rate_raise', 75)
+        self.declare_parameter('axidraw_const_speed', False)
+        self.declare_parameter('axidraw_pen_delay_down', 0)
+        self.declare_parameter('axidraw_pen_delay_up', 0)
 
         self.status_srv = self.create_service(Status, 'axidraw_status', self.get_status)
 
