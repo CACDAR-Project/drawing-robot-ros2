@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     client.init(node, hw_ns);
     client.motion_enable(true);
 
-    println("Setting xArm lite6 to free-drive mode. Attach pen and touch the drawing surface.");
+    println("Setting xArm lite6 to free-drive mode. Attach pen and touch the drawing surface. (You can also skip this if you do not want to measure Z)");
     client.set_mode(2);
     client.set_state(0);
     //rclcpp::sleep_for(std::chrono::seconds(20));
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     println("z-offset value for '" + ee_link + "' (use this value for the current pen): " + z);
 
 
-    println("Moving to start drawing pose");
+    println("WARNING. Moving to start drawing pose. Press ctrl-c to cancel");
     wait();
     client.set_servo_angle(jnt_drawing_pose, 1, 1, 1, true, 100, -1);
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 
     rclcpp::shutdown();
 
-    println("Done, ignore any errors after this");
+    println("Done, ignore any errors after this. Restart lite6_controller after I exit.");
     wait();
     return 0;
 }

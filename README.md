@@ -75,6 +75,7 @@ DummyController echoes Motion messages to the terminal.
 ros2 run robot_controller dummy_controller
 ```
 
+### AxidrawController
 AxidrawController draws on the axidraw robot.
 Find the serial device in "/dev/", it is usually named "/dev/ttyACMX" where X is usually 0.
 Try a different serial port if the axidraw_controller continuously logs a message about failing to connect.
@@ -82,6 +83,7 @@ Try a different serial port if the axidraw_controller continuously logs a messag
 ros2 launch axidraw_controller axidraw_controller.launch.py serial_port:=/dev/ttyACM0 config:=./config.yaml
 ```
 
+### Lite6Controller
 This starts the simulated lite6
 ``` sh
 ros2 launch lite6_controller lite6_gazebo.launch.py config:=./config.yaml
@@ -96,6 +98,18 @@ This runs the real lite6 without Rviz (can be run on headless device over ssh)
 ``` sh
 ros2 launch lite6_controller lite6_real_no_gui.launch.py config:=./config.yaml
 ```
+
+Before using the real lite6, it is recommended to run the calibration program.
+A lite6_controller must be running for calibration.
+This can be used to measure the Z height for a specific pen.
+The program also moves the arm to a known default position.
+``` sh
+ros2 run lite6_controller lite6_calibration
+```
+Follow the instructions, pressing enter when prompted.
+
+Change the Z-offset value accordingly.
+Restart the running lite6_controller after calibration.
 
 ### DrawingController
 Once a RobotController is running, simultaneously (using tmux or another terminal) run
