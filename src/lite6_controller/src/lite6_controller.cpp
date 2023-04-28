@@ -92,22 +92,22 @@ public:
       move_group(std::shared_ptr<rclcpp::Node>(std::move(this)), MOVE_GROUP)
   {
     // Declare parameters
-    this->declare_parameter("x_limit_lower", 0.1);
-    this->declare_parameter("x_limit_upper", 0.305);
-    this->declare_parameter("y_limit_lower", -0.1475);
-    this->declare_parameter("y_limit_upper", 0.1475);
-    this->declare_parameter("z_offset", 0.141087);
-    this->declare_parameter("z_lift_amount", 0.01);
-    this->declare_parameter("max_velocity_scaling_factor", 1.0);
-    this->declare_parameter("max_acceleration_scaling_factor", 0.6);
-    this->declare_parameter("blend_radius", 0.0);
+    this->declare_parameter("lite6_x_limit_lower", 0.1);
+    this->declare_parameter("lite6_x_limit_upper", 0.305);
+    this->declare_parameter("lite6_y_limit_lower", -0.1475);
+    this->declare_parameter("lite6_y_limit_upper", 0.1475);
+    this->declare_parameter("lite6_z_offset", 0.141087);
+    this->declare_parameter("lite6_z_lift_amount", 0.01);
+    this->declare_parameter("lite6_max_velocity_scaling_factor", 1.0);
+    this->declare_parameter("lite6_max_acceleration_scaling_factor", 0.6);
+    this->declare_parameter("lite6_blend_radius", 0.0);
 
-    xlim_lower = this->get_parameter("x_limit_lower").as_double();
-    xlim_upper = this->get_parameter("x_limit_upper").as_double();
-    ylim_lower = this->get_parameter("y_limit_lower").as_double();
-    ylim_upper = this->get_parameter("y_limit_upper").as_double();
-    zlim_lower = this->get_parameter("z_offset").as_double();
-    zlim_upper = zlim_lower + this->get_parameter("z_lift_amount").as_double();
+    xlim_lower = this->get_parameter("lite6_x_limit_lower").as_double();
+    xlim_upper = this->get_parameter("lite6_x_limit_upper").as_double();
+    ylim_lower = this->get_parameter("lite6_y_limit_lower").as_double();
+    ylim_upper = this->get_parameter("lite6_y_limit_upper").as_double();
+    zlim_lower = this->get_parameter("lite6_z_offset").as_double();
+    zlim_upper = zlim_lower + this->get_parameter("lite6_z_lift_amount").as_double();
 
     this->move_group.setMaxAccelerationScalingFactor(1.0);
     this->move_group.setMaxVelocityScalingFactor(1.0);
@@ -216,8 +216,8 @@ public:
       //mpr.planner_id = "LIN";
       mpr.group_name = move_group.getName();
       //mpr.max_velocity_scaling_factor = 1.0;
-      mpr.max_velocity_scaling_factor = this->get_parameter("max_velocity_scaling_factor").as_double();
-      mpr.max_acceleration_scaling_factor = this->get_parameter("max_acceleration_scaling_factor").as_double();
+      mpr.max_velocity_scaling_factor = this->get_parameter("lite6_max_velocity_scaling_factor").as_double();
+      mpr.max_acceleration_scaling_factor = this->get_parameter("lite6_max_acceleration_scaling_factor").as_double();
 
       //mpr.max_acceleration_scaling_factor = 0.1;
       mpr.allowed_planning_time = 20;
@@ -250,7 +250,7 @@ public:
       mpr.goal_constraints.push_back(pose_goal);
 
       msi.req = mpr;
-      msi.blend_radius = this->get_parameter("blend_radius").as_double();
+      msi.blend_radius = this->get_parameter("lite6_blend_radius").as_double();
       if (coincidentPoints(&pose.pose.position, &previous_point, msi.blend_radius + 1e-5))
       {
         RCLCPP_ERROR(this->get_logger(), "Detected coincident points, setting blend radius to 0.0");

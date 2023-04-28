@@ -1,4 +1,5 @@
 import os
+import yaml
 from launch import LaunchDescription
 from launch.actions import OpaqueFunction, IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -55,6 +56,8 @@ def launch_setup(context, *args, **kwargs):
 
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
     log_level = LaunchConfiguration("log_level", default='warn')
+
+    config = LaunchConfiguration("config", default=PathJoinSubstitution([FindPackageShare('lite6_controller'), 'config', 'config.yaml']))
 
     # # robot driver launch
     # # xarm_api/launch/_robot_driver.launch.py
@@ -165,7 +168,11 @@ def launch_setup(context, *args, **kwargs):
 
     joint_limits_yaml = robot_description_parameters.get('robot_description_planning', None)
 
-    lite6_config = load_yaml('lite6_controller', 'config', 'config.yaml')
+    robotcontroller_config = config.perform(context)
+    with open(robotcontroller_config, 'r') as f:
+        lite6_config = yaml.safe_load(f)
+        print(f'Loaded configuration: {lite6_config}')
+    robot_description_parameters.update(lite6_config['/robot_controller']['ros__parameters'])
 
     if add_gripper.perform(context) in ('True', 'true'):
         gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type.perform(context)), '{}.yaml'.format(controllers_name.perform(context)))
@@ -355,7 +362,6 @@ def launch_setup(context, *args, **kwargs):
                 #robot_description_parameters['robot_description_kinematics'],
                 robot_description_parameters,
                 {"use_sim_time": use_sim_time},
-                lite6_config,
             ],
         ),
     ]
