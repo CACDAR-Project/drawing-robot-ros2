@@ -14,10 +14,10 @@
 
 /axidraw_serial:
   ros__parameters:
-    axidraw_accel: 100
-    axidraw_speed_pendown: 50
-    axidraw_speed_penup: 50
-    axidraw_const_speed: false
+    axidraw_accel: 80
+    axidraw_speed_pendown: 25
+    axidraw_speed_penup: 60
+    axidraw_const_speed: true
     axidraw_pen_delay_down: 0
     axidraw_pen_delay_up: 0
     axidraw_pen_pos_down: 40
