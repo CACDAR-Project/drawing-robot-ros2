@@ -183,27 +183,6 @@ def launch_setup(context, *args, **kwargs):
     }
 
 
-    nodes = [
-        Node(
-            package="lite6_controller",
-            executable="lite6_controller",
-            output="log",
-            arguments=["--ros-args", "--log-level", log_level],
-            parameters=[
-                robot_description,
-                robot_description_semantic,
-                {"use_sim_time": use_sim_time},
-            ],
-        ),
-        Node(
-            package="virtual_drawing_surface",
-            executable="drawing_surface.py",
-            output="log",
-            arguments=["--ros-args", "--log-level", log_level],
-            parameters=[{"use_sim_time": use_sim_time}],
-        ),
-    ]
-
 # ######################3
 
     #moveit_controller_manager_key = LaunchConfiguration('moveit_controller_manager_key', default='moveit_fake_controller_manager')
@@ -445,6 +424,30 @@ def launch_setup(context, *args, **kwargs):
         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'world', 'link_base'],
         parameters=[{'use_sim_time': use_sim_time}],
     )
+
+    nodes = [
+        Node(
+            package="lite6_controller",
+            executable="lite6_controller",
+            output="log",
+            arguments=["--ros-args", "--log-level", log_level],
+            parameters=[
+                robot_description_parameters,
+                {"use_sim_time": use_sim_time},
+            ],
+        ),
+        Node(
+            package="virtual_drawing_surface",
+            executable="drawing_surface.py",
+            output="log",
+            arguments=["--ros-args", "--log-level", log_level],
+            parameters=[
+                robot_description_parameters,
+                {"use_sim_time": use_sim_time}
+            ],
+        ),
+    ]
+
 
     return [
         #RegisterEventHandler(event_handler=OnProcessExit(

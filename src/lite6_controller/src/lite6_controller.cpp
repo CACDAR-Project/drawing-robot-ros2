@@ -488,7 +488,7 @@ public:
       RCLCPP_ERROR(this->get_logger(), "Created MSR for tail");
       if (msr.items.empty())
       {
-        RCLCPP_ERROR(this->get_logger(), "MSR EMPTY");
+        RCLCPP_ERROR(this->get_logger(), "MSR EMPTY, giving up");
         return;
       }
       ts->push_back(sendRequest(msr));
@@ -499,6 +499,22 @@ public:
     {
       RCLCPP_ERROR(this->get_logger(), "Path was empty, no trajectories created");
     }
+  }
+
+  void pathToTrajectoryFallback(const std::vector<geometry_msgs::msg::PoseStamped> *path, std::vector<moveit_msgs::msg::RobotTrajectory> *ts)
+  {
+      move_group_state = move_group.getCurrentState(10);
+
+      auto msr = createMotionSequenceRequest(path, "PTP");
+      RCLCPP_ERROR(this->get_logger(), "Created Fallback PTP MSR for penup");
+      if (msr.items.empty())
+      {
+        RCLCPP_ERROR(this->get_logger(), "MSR EMPTY");
+        return;
+      }
+      ts->push_back(sendRequest(msr));
+      //planAndLogOffset(&penup);
+      setMoveGroupState(ts->back());
   }
 
   /**
@@ -529,6 +545,25 @@ public:
       }
       trajectory_queue.push(t);
       n++;
+    }
+
+    // retry with PTP
+    if (n==0)
+    {
+      RCLCPP_INFO(this->get_logger(), "Retrying %ld trajectories with PTP", ts.size());
+      ts = std::vector<moveit_msgs::msg::RobotTrajectory>();
+      pathToTrajectoryFallback(&goal->motion.path, &ts);
+      for (auto t : ts)
+      {
+        RCLCPP_INFO(this->get_logger(), "Adding result to motion queue");
+        if (t.joint_trajectory.points.empty())
+        {
+          RCLCPP_ERROR(this->get_logger(), "TRAJECTORY IS EMPTY");
+          continue;
+        }
+        trajectory_queue.push(t);
+        n++;
+      }
     }
 
     std::string status = "";
