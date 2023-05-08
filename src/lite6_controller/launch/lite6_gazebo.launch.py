@@ -12,7 +12,7 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Comm
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
-from launch.actions import OpaqueFunction
+from launch.actions import OpaqueFunction, TimerAction
 
 
 def launch_setup(context, *args, **kwargs):
@@ -454,8 +454,10 @@ def launch_setup(context, *args, **kwargs):
         #rviz2_node,
         static_tf,
         move_group_node,
-        robot_gazebo_launch,
-    ] + nodes
+        #robot_gazebo_launch,
+        TimerAction(period=5.0, actions=[robot_gazebo_launch]),
+        #]
+        ] + nodes
 
 # ######################3
 
